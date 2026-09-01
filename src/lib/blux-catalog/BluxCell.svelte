@@ -8,6 +8,7 @@
   import type { BluxCellData } from "$lib/blux-catalog/cell";
   import { gridCellBasis } from "$lib/blux-catalog/layout";
   import Self from "./BluxCell.svelte";
+  import { cappedWidths } from "@reddoorla/maintenance/images";
 
   let { cell, basis }: { cell: BluxCellData; basis?: string } = $props();
   let sub = $derived(cell.subgrid ?? []);
@@ -44,7 +45,14 @@
       data-ratio={cell.media_ratio}
       data-cover={cell.cover || undefined}
     >
-      <PrismicImage field={cell.media} />
+      <!-- Cell media is an unstyled theming hook; bound by the band max-width
+           until a site's theme.css narrows the cell. -->
+      <PrismicImage
+        field={cell.media}
+        widths={cappedWidths(cell.media)}
+        sizes="(min-width: 768px) min(1280px, 92vw), 92vw"
+        loading="lazy"
+      />
     </div>
   {/if}
   {#if isFilled.keyText(cell.image_embed)}
