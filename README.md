@@ -7,10 +7,27 @@
 > `reddoor-maintenance/src/blux` and the template for Blux-migrated sites
 > (`/new-site <slug> --track blux`).
 >
-> **Merge direction is one way:** pull shared improvements with
-> `git merge starter/main` (remote `starter` = the native repo). Never merge
-> this repo back into `reddoor-starter`; re-apply a generic fix there as its
-> own PR.
+> **Do NOT plain-merge the native repo.** Verified 2026-09-01: the native
+> template deleted the whole Blux layer in reddoor-starter#106, so
+> `git merge starter/main` applies those 178 deletions as clean, CONFLICT-FREE
+> removals — it silently strips `src/lib/blux*`, every `Blux*` slice and the
+> fidelity gates from this repo. Only `README.md` conflicts, so nothing warns
+> you.
+>
+> To adopt a shared improvement (a11y, media, forms, CI, deps), cherry-pick it:
+>
+> ```bash
+> git fetch starter && git cherry-pick <sha>   # remote `starter` = the native repo
+> ```
+>
+> If you ever want plain merges to work from some point forward, record the
+> split as already-merged ONCE with `git merge -s ours starter/main` — that
+> permanently excludes everything in the native repo up to that commit, shared
+> improvements included, so it is an architecture decision rather than a
+> routine step.
+>
+> Merging is one-way in the other direction too: never merge this repo back
+> into `reddoor-starter`; re-apply a generic fix there as its own PR.
 
 ## Purpose
 
