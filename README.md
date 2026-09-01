@@ -1,8 +1,21 @@
-# Reddoor Starter and Site Scaffold
+# Reddoor Starter — Blux migration track
+
+> This is the **Blux track** of [reddoor-starter](https://github.com/reddoorla/reddoor-starter):
+> a full-history snapshot of the native template taken 2026-08-31 (`82d93b0`)
+> that keeps the Blux render layer (`src/lib/blux*`, the `Blux*` slices, the
+> frozen-page route, the-pointe fidelity gates). It is the render target of
+> `reddoor-maintenance/src/blux` and the template for Blux-migrated sites
+> (`/new-site <slug> --track blux`).
+>
+> **Merge direction is one way:** pull shared improvements with
+> `git merge starter/main` (remote `starter` = the native repo). Never merge
+> this repo back into `reddoor-starter`; re-apply a generic fix there as its
+> own PR.
 
 ## Purpose
 
-A forkable starting point for all SvelteKit, Tailwind + Prismic sites developed at Reddoor.
+The forkable starting point for SvelteKit, Tailwind + Prismic sites that are
+migrated from the Blux platform.
 
 ## Stack
 
