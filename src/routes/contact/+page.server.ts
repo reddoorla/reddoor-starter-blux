@@ -1,5 +1,6 @@
 import { env } from "$env/dynamic/private";
 import { createIngestAction } from "@reddoorla/maintenance/forms";
+import { replyCopyFor } from "$lib/server/reply-copy";
 import type { Actions, PageServerLoad } from "./$types";
 
 // The root layout sets `prerender = "auto"`; a form `action` cannot run on a
@@ -21,7 +22,7 @@ export const actions: Actions = {
       url: env.FORMS_INGEST_URL,
       token: env.FORMS_INGEST_TOKEN,
     }),
-    buildPayload: (form, event) => ({
+    buildPayload: async (form, event) => ({
       name: form.get("name")?.toString(),
       email: form.get("email")?.toString(),
       phone: form.get("phone")?.toString(),
@@ -33,6 +34,13 @@ export const actions: Actions = {
       // sets it. Rides through as an extraField (no schema change); central ingest
       // recognizes it and routes the submission away from every real sink.
       testMode: form.get("testMode")?.toString() === "true" || undefined,
+      // Confirmation-email copy the client authors in Prismic, resolved here on
+      // the server and forwarded in the reserved `_reply` envelope. Read from the
+      // CMS, never from `form` — the autoresponder mails a submitter-supplied
+      // address, so submitter-authored body copy would make the sending domain a
+      // phishing relay. Undefined until the client writes the document, and the
+      // shared package then sends its own per-form-type default.
+      _reply: await replyCopyFor(event, "contact"),
     }),
   }),
 };
