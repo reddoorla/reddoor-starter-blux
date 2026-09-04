@@ -20,3 +20,4 @@ test-results
 .lighthouseci
 .reddoor-a11y
 .reddoor-a11y-spec-*
+.worktrees/
