@@ -13,7 +13,9 @@ export default defineConfig({
   },
   test: {
     environment: "jsdom",
-    include: ["src/**/*.test.{js,ts}"],
+    // scripts/ too, as on the native starter: the placeholder-hatch guard test
+    // lives there, and a repo-invariant test that never runs is a comment.
+    include: ["src/**/*.test.{js,ts}", "scripts/**/*.test.{js,ts}"],
     setupFiles: ["./vitest-setup.ts"],
     server: {
       deps: {
