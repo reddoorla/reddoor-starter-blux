@@ -1,6 +1,7 @@
 <script lang="ts">
   import { onMount } from "svelte";
   import { fade } from "$lib/transitions";
+  import { trapFocus } from "$lib/actions/trapFocus";
 
   let showLandscapeModal = $state(false);
 
@@ -27,8 +28,12 @@
 </script>
 
 {#if showLandscapeModal}
+  <!-- No focusable children, so trapFocus only moves focus onto the container
+       (no Tab trap, no Escape — see the action's header). Without it focus stays
+       on the page hidden behind this overlay. -->
   <div
     transition:fade
+    use:trapFocus
     role="dialog"
     aria-modal="true"
     aria-labelledby="landscape-heading"
