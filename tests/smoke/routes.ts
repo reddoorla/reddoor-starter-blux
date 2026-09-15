@@ -31,9 +31,27 @@ export type SmokeRoute = {
 // Same resolution order as src/lib/prismicio.ts (VITE_PRISMIC_ENVIRONMENT
 // override, then slicemachine.config.json). This file runs in the Playwright
 // process, so read process.env rather than import.meta.env.
+const PLACEHOLDER_SENTINEL = "your-prismic-repo-name";
 const repositoryName =
   process.env.VITE_PRISMIC_ENVIRONMENT || slicemachineConfig.repositoryName;
-const isPlaceholderRepo = repositoryName === "your-prismic-repo-name";
+const isPlaceholderRepo = repositoryName === PLACEHOLDER_SENTINEL;
+
+// The env-var route to the sentinel is a LOCAL-ONLY hatch (#120). Under CI or
+// Netlify it would flip `/`'s expectation to 404 and pass — the smoke half of a
+// gate agreeing with a build that emitted no home page. Throw, never flip:
+// Playwright fails to load this manifest and the run exits non-zero. Mirrors
+// the guard in svelte.config.js, which reads the same variable at build time.
+if (
+  process.env.VITE_PRISMIC_ENVIRONMENT === PLACEHOLDER_SENTINEL &&
+  (process.env.CI || process.env.NETLIFY)
+) {
+  throw new Error(
+    `VITE_PRISMIC_ENVIRONMENT=${PLACEHOLDER_SENTINEL} is a local-only hatch and is set in ` +
+      "CI/Netlify: it would make this smoke run expect no home page and pass. Unset it " +
+      "there; a site whose Prismic repository is not ready should stay red, or keep the " +
+      "sentinel in slicemachine.config.json.",
+  );
+}
 
 export const smokeRoutes: SmokeRoute[] = [
   isPlaceholderRepo

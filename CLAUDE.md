@@ -30,7 +30,12 @@ native starter, which has diverged.
   never merge this repo back into the native one.
 - **`slicemachine.config.json` still holds the `your-prismic-repo-name`
   sentinel**, deliberately — prerender tolerates it so a fresh clone's CI build
-  is green before the CMS exists.
+  is green before the CMS exists. `VITE_PRISMIC_ENVIRONMENT=your-prismic-repo-name`
+  reaches the same sentinel from the environment and is a **local-only hatch**:
+  set in CI or on Netlify it greens a build that emits no home page alongside a
+  smoke run that expects `/` to 404. `svelte.config.js` and
+  `tests/smoke/routes.ts` refuse to load under that combination
+  (reddoor-starter#120, picked from `ff0b6d8`).
 
 ## The work journal
 
