@@ -9,6 +9,7 @@ This starter targets **WCAG 2.2 Level AA**. Accessibility is treated as a defaul
 - **Accessible primitives** for the patterns most likely to ship a11y bugs:
   - [Accordion](../src/lib/components/Accordion.svelte) — disclosure pattern with `aria-expanded`, `aria-controls`, `aria-labelledby`.
   - [Modal](../src/lib/components/Modal.svelte) — native `<dialog>` with backdrop, ESC-to-close, and implicit focus trap.
+  - [Nav](../src/lib/components/Nav.svelte) — the menu trigger and the overlay's Close both carry `aria-expanded` + `aria-controls` pointing at the overlay's id, so the menu's state is announced across the swap that unmounts one control and mounts the other. Both acknowledge a press on touch via `data-pressed`: CSS `:active` does not fire for a touch press, so a tap that looks like nothing happened gets repeated.
   - [Slider](../src/lib/components/Animation/Slider.svelte) — `aria-roledescription="carousel"`, per-slide controls with `aria-current`.
   - [Form / Field](../src/lib/components/Form.svelte) — every input has a programmatic label, required fields announce "(required)" to screen readers, errors link via `aria-describedby` and surface in a focused error summary.
 - **A keyboard-focus floor** — every link, button, `<summary>` and tabbable element gets a 2px `:focus-visible` outline from [app.css](../src/app.css), so a component that ships no ring of its own is still keyboard-navigable (WCAG 2.4.7). Authored `focus-visible:ring-*` utilities still win: the floor is written with `:where()`, which contributes zero specificity.

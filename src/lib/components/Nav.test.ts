@@ -173,9 +173,12 @@ describe("Nav — mobile menu", () => {
 
   it("desktop dropdown is a disclosure: aria-expanded toggles, Escape closes", async () => {
     const { container } = render(Nav, { items: itemsWithDropdown });
-    // The desktop dropdown toggle carries aria-controls (the mobile menu isn't
-    // open, so it's the only such button).
-    const toggle = container.querySelector("button[aria-controls]") as HTMLButtonElement;
+    // Scoped to the dropdown's own id prefix: the menu trigger carries
+    // aria-controls too (it points at the overlay — see the aria-state suite
+    // below), so a bare `button[aria-controls]` no longer names one button.
+    const toggle = container.querySelector(
+      'button[aria-controls^="nav-dropdown-"]',
+    ) as HTMLButtonElement;
     expect(toggle).toBeTruthy();
     // No misleading aria-haspopup (the popup is a list of links, not a menu).
     expect(toggle.getAttribute("aria-haspopup")).toBeNull();
@@ -276,5 +279,83 @@ describe("Nav — navLinks (page-data) mode", () => {
     await fireEvent.click(link);
 
     expect(queryByRole("dialog")).toBeNull();
+  });
+});
+
+// The trigger unmounts while the menu is open and the overlay renders its own
+// Close in the same slot, so no single element can carry a flipping
+// aria-expanded. Both buttons carry the pair instead, pointing at the dialog's
+// id — which is what makes `[aria-controls="nav-menu"]` a stable handle whose
+// aria-expanded reads false → true across the swap.
+describe("Nav — the trigger announces the menu's state", () => {
+  const MENU_ID = "nav-menu";
+  const stateButton = () =>
+    document.body.querySelector(`button[aria-controls="${MENU_ID}"]`) as HTMLButtonElement;
+
+  for (const [mode, props] of [
+    ["site-config items", { items }],
+    ["page-data navLinks", { navLinks }],
+  ] as const) {
+    it(`(${mode}) aria-expanded flips false → true and aria-controls names the dialog`, async () => {
+      const { getByLabelText, getByRole } = render(Nav, props);
+
+      const trigger = getByLabelText("Open menu");
+      expect(trigger.getAttribute("aria-controls")).toBe(MENU_ID);
+      expect(trigger.getAttribute("aria-expanded")).toBe("false");
+
+      await fireEvent.click(trigger);
+      await frame();
+
+      // The id the trigger pointed at is the dialog that actually mounted — a
+      // dangling aria-controls is worse than none.
+      const dialog = getByRole("dialog");
+      expect(dialog.id).toBe(MENU_ID);
+
+      // Same handle, now the Close button, now expanded.
+      const open = stateButton();
+      expect(open.getAttribute("aria-label")).toBe("Close menu");
+      expect(open.getAttribute("aria-expanded")).toBe("true");
+
+      await fireEvent.click(open);
+      await frame();
+      await frame();
+      expect(stateButton().getAttribute("aria-expanded")).toBe("false");
+    });
+  }
+});
+
+// A tap that looks like nothing happened gets tapped again — and the second tap
+// lands after the overlay has mounted, closing it. `hover:` compiles behind
+// `@media (hover: hover)`, so a phone got no feedback at all, and `:active`
+// alone is not enough either: a real dispatched touchStart leaves
+// `matches(":active")` false in Chromium. So the press is driven by POINTER
+// events and surfaced as `data-pressed`, which the glyph's classes key off.
+describe("Nav — the trigger acknowledges a press", () => {
+  it("sets data-pressed on pointerdown and clears it on every release path", async () => {
+    const { getByLabelText } = render(Nav, { items });
+    const trigger = getByLabelText("Open menu");
+    expect(trigger.hasAttribute("data-pressed")).toBe(false);
+
+    // A finger that slides off the control, a drag the browser turns into a
+    // scroll, and a blur must all leave the press state clean — otherwise the
+    // affordance sticks on and the control looks permanently held.
+    for (const release of ["pointerUp", "pointerCancel", "pointerLeave", "blur"] as const) {
+      await fireEvent.pointerDown(trigger);
+      expect(trigger.hasAttribute("data-pressed"), `pressed before ${release}`).toBe(true);
+      await fireEvent[release](trigger);
+      expect(trigger.hasAttribute("data-pressed"), `released on ${release}`).toBe(false);
+    }
+  });
+
+  it("presses the Close button independently of the trigger", async () => {
+    const { getByLabelText } = render(Nav, { items });
+    await fireEvent.click(getByLabelText("Open menu"));
+    await frame();
+
+    const close = getByLabelText("Close menu");
+    await fireEvent.pointerDown(close);
+    expect(close.hasAttribute("data-pressed")).toBe(true);
+    await fireEvent.pointerUp(close);
+    expect(close.hasAttribute("data-pressed")).toBe(false);
   });
 });
