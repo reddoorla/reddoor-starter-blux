@@ -46,6 +46,26 @@
     [description ? descriptionId : null, error ? errorId : null].filter(Boolean).join(" ") ||
       undefined,
   );
+
+  // One string, two controls: the input and the textarea carried the same class
+  // list copy-pasted, which is exactly how a fix lands on one control and not
+  // the other. Kept as a literal so Tailwind's source scan still sees every
+  // class.
+  //
+  // `border-secondary` replaces `border-light`: --color-light is #e5e7eb, which
+  // measures 1.20:1 against the white page — the fields read as invisible boxes
+  // and a visitor has to hunt for where to type. --color-secondary (#6b7280) is
+  // 4.83:1, clearing WCAG 1.4.11's 3:1 non-text minimum with room to spare.
+  //
+  // `focus:outline-hidden`, NOT `focus:outline-none`: in Tailwind v4 the latter
+  // resolves to `outline-style: none` and takes the forced-colors fallback with
+  // it. Under forced colours the engine drops the box-shadow ring, so that
+  // transparent 2px outline is the only focus affordance left.
+  const controlClass =
+    "border-2 border-secondary rounded px-3 py-2 " +
+    "transition-[border-color,box-shadow] duration-150 ease-out motion-reduce:transition-none " +
+    "focus:outline-hidden focus:border-primary focus:ring-2 focus:ring-primary " +
+    "aria-invalid:border-red-600";
 </script>
 
 <div class="flex flex-col gap-1">
@@ -74,8 +94,7 @@
       bind:value
       aria-describedby={describedBy}
       aria-invalid={error ? "true" : undefined}
-      class="border-2 border-light rounded px-3 py-2 focus:outline-none focus:ring-2 focus:ring-primary aria-invalid:border-red-600"
-    ></textarea>
+      class={controlClass}></textarea>
   {:else}
     <input
       id={inputId}
@@ -91,7 +110,7 @@
       bind:value
       aria-describedby={describedBy}
       aria-invalid={error ? "true" : undefined}
-      class="border-2 border-light rounded px-3 py-2 focus:outline-none focus:ring-2 focus:ring-primary aria-invalid:border-red-600"
+      class={controlClass}
     />
   {/if}
 

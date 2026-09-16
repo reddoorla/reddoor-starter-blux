@@ -61,7 +61,13 @@ export function trapFocus(node: HTMLElement, options: TrapFocusOptions = {}) {
   let previouslyFocused: HTMLElement | null = null;
 
   const moveFocusIn = () => {
-    const preferred = node.querySelector<HTMLElement>("[data-autofocus]");
+    // `data-autofocus` is honoured on the CONTAINER as well as on a descendant.
+    // An overlay whose first focusable is a real destination (a logo linking
+    // home, say) should not have that destination announced and ringed merely
+    // because the overlay opened.
+    const preferred = node.matches("[data-autofocus]")
+      ? node
+      : node.querySelector<HTMLElement>("[data-autofocus]");
     const target = preferred ?? focusable(node)[0];
     if (target) {
       target.focus();
@@ -91,7 +97,11 @@ export function trapFocus(node: HTMLElement, options: TrapFocusOptions = {}) {
     // Wrap decisions stay scoped to the node: a Tab from outside the overlay
     // (escaped focus) is intercepted and sent back in.
     if (e.shiftKey) {
-      if (activeEl === first || !node.contains(activeEl)) {
+      // `activeEl === node` is the container-autofocus case: the container sits
+      // BEFORE every focusable it holds, so an unhandled Shift+Tab there walks
+      // backwards out of the overlay (and focusin would drag it back to the
+      // container, which is a bounce, not a wrap). Treat it as the first item.
+      if (activeEl === first || activeEl === node || !node.contains(activeEl)) {
         e.preventDefault();
         last.focus();
       }

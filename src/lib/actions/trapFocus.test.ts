@@ -386,3 +386,54 @@ describe("trapFocus — enabled option", () => {
     expect(e.defaultPrevented).toBe(false);
   });
 });
+
+// An overlay whose first focusable is a real destination — a logo linking home,
+// say — should not have that destination announced and ringed merely because
+// the overlay opened. Such an overlay opts in by carrying `data-autofocus` on
+// the CONTAINER itself, which the action honours alongside a descendant's.
+describe("trapFocus: container-level data-autofocus", () => {
+  beforeEach(() => {
+    // jsdom performs no layout, so treat connected elements as visible or the
+    // action's getClientRects() filter discards every focusable.
+    vi.spyOn(Element.prototype, "getClientRects").mockImplementation(function (this: Element) {
+      return (this.isConnected ? [{}] : []) as unknown as DOMRectList;
+    });
+  });
+
+  afterEach(() => {
+    vi.restoreAllMocks();
+    document.body.innerHTML = "";
+  });
+
+  function overlay() {
+    document.body.innerHTML = `
+      <div id="ov" role="dialog" aria-modal="true" tabindex="-1" data-autofocus>
+        <a id="first" href="/">Home</a>
+        <button id="last" type="button">Close</button>
+      </div>`;
+    return document.getElementById("ov") as HTMLElement;
+  }
+
+  const frame = () => new Promise((r) => requestAnimationFrame(r));
+
+  it("focuses the container, not its first focusable child", async () => {
+    const node = overlay();
+    const handle = trapFocus(node);
+    await frame();
+    expect(document.activeElement).toBe(node);
+    expect(document.activeElement).not.toBe(document.getElementById("first"));
+    handle.destroy();
+  });
+
+  it("wraps Shift+Tab from the container to the LAST focusable", async () => {
+    // The container sits before every focusable it holds, so an unhandled
+    // Shift+Tab there walks backwards out of the overlay — and focusin would
+    // drag it back to the container, which is a bounce, not a wrap.
+    const node = overlay();
+    const handle = trapFocus(node);
+    await frame();
+    document.dispatchEvent(new KeyboardEvent("keydown", { key: "Tab", shiftKey: true }));
+    expect(document.activeElement).toBe(document.getElementById("last"));
+    handle.destroy();
+  });
+});
