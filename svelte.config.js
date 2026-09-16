@@ -1,6 +1,7 @@
 import { readFileSync, readdirSync } from "node:fs";
 import adapter from "@sveltejs/adapter-netlify";
 import { vitePreprocess } from "@sveltejs/vite-plugin-svelte";
+import { SVELTE_EVENT_REPLAY_HASH } from "@reddoorla/maintenance/configs/svelte";
 
 const slicemachine = JSON.parse(
   readFileSync(new URL("./slicemachine.config.json", import.meta.url), "utf-8"),
@@ -148,6 +149,33 @@ const config = {
           "self",
           "https://static.cdn.prismic.io",
           "https://player.vimeo.com",
+          // Svelte 5 server-renders `onload="this.__e=event"` (and onerror) on
+          // every element carrying an attribute spread — i.e. every
+          // `<img {...getImageProps(field)} />` the Prismic helpers produce.
+          // It is the replay stub for a load/error that fires before hydration.
+          // A nonce NEVER covers an event-handler attribute, so without both of
+          // the entries below the browser refuses to run it: the pre-hydration
+          // load is dropped (anything keyed on it can strand) and one violation
+          // is POSTed to /api/csp-report per image per page view — 12 on `/`
+          // alone, measured on beachfront-dentistry 2026-08-13 — burying real
+          // violations. 'unsafe-hashes' widens hash matching to event handlers
+          // and NOTHING else, so only this exact one-liner is permitted; pair it
+          // with 'unsafe-inline' and that guarantee is gone (scripts/csp-policy.test.ts
+          // asserts we do not). The hash is imported, never transcribed: the
+          // stub's text is upstream's to change, and a copied string cannot be
+          // told apart from a stale one.
+          //
+          // Deliberately NOT the `script-src-attr` form used by
+          // vida-legacy-foundation. That directive is the more precise home for
+          // handler attributes, but it is CSP Level 3: Safari does not implement
+          // it, ignores it, and falls back to script-src — which would then
+          // carry no 'unsafe-hashes', so every Safari visitor keeps the exact
+          // defect this removes. The shared baseline in
+          // @reddoorla/maintenance/configs/svelte puts both in script-src for
+          // this reason, and this file overrides script-src wholesale, so it has
+          // to carry them itself.
+          "unsafe-hashes",
+          SVELTE_EVENT_REPLAY_HASH,
           // Cloudflare Turnstile contact-form widget (enable via PUBLIC_TURNSTILE_SITE_KEY).
           "https://challenges.cloudflare.com",
           // Google Maps JS API — map hydration (VITE_GOOGLE_MAPS_KEY); see
