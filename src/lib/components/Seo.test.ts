@@ -1,6 +1,7 @@
 import { describe, it, expect, afterEach } from "vitest";
 import { render, cleanup } from "@testing-library/svelte";
 import Seo from "./Seo.svelte";
+import { SITE_NAME } from "$lib/seo";
 
 afterEach(() => cleanup());
 
@@ -31,7 +32,7 @@ describe("Seo head output", () => {
     // The bug the fleet repeats: og:* under name= is ignored by OG parsers.
     expect(head.querySelector('meta[name="og:title"]')).toBeNull();
     expect(head.querySelector('meta[property="og:type"]')?.getAttribute("content")).toBe("website");
-    expect(attr('meta[property="og:site_name"]')).toBe("Reddoor");
+    expect(attr('meta[property="og:site_name"]')).toBe(SITE_NAME);
     expect(attr('meta[property="og:locale"]')).toBe("en_US");
   });
 
