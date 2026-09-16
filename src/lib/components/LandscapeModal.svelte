@@ -1,11 +1,19 @@
-<!-- Orientation lockout. NOT mounted by the template, and mounting it site-wide
-     is a WCAG 2.1 SC 1.3.4 (Orientation) failure: it paints an opaque,
-     undismissable overlay over any coarse-pointer device held sideways under
-     1024px, with nothing reachable behind it. It is kept as a primitive for the
-     rare route whose content genuinely cannot render in landscape, where it must
-     be paired with a way out. tests/smoke/landscape.spec.ts fails if the root
-     layout mounts it again. -->
 <script lang="ts">
+  // Orientation lockout — a primitive the template deliberately does NOT mount (tests/smoke/landscape.spec.ts fails if it is re-mounted), because an undismissable landscape overlay fails WCAG 2.1 SC 1.3.4 (Orientation).
+  //
+  // Mounted, it paints an opaque overlay over ANY coarse-pointer device held
+  // sideways under 1024px, with nothing reachable behind it. It is kept for the
+  // rare route whose content genuinely cannot render in landscape, and there it
+  // has to be paired with a way out.
+  //
+  // The accessibility work in reddoor-starter#127 still applies and its three
+  // tests still run against this component directly. What nothing covers is the
+  // component ON a page — the axe and smoke gates only see what the layout
+  // mounts, and the layout no longer mounts this.
+  //
+  // Upstream this text also feeds docs/COMPONENTS.md, which is generated from a
+  // module's first sentence; this track ships no capability index, so README.md
+  // carries the same statement by hand instead.
   import { onMount } from "svelte";
   import { fade } from "$lib/transitions";
   import { trapFocus } from "$lib/actions/trapFocus";
