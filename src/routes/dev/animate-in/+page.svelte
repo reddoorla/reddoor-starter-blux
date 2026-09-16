@@ -8,6 +8,30 @@
 <div class="min-h-screen flex flex-col items-center justify-center gap-4 px-8">
   <h1 class="text-4xl font-bold">use:animateIn demo</h1>
   <p class="text-secondary">Scroll down to see reveal animations.</p>
+
+  <!-- The first-paint reveal, and the only element on this page whose hidden
+       state ships in the SERVER markup. `data-reveal` is a literal attribute
+       here, not something hydration adds: app.css hides `[data-reveal]` so the
+       box is already hidden when the browser first paints, instead of being
+       yanked to opacity 0 when the action runs.
+
+       The two halves are one decision. `failSafe` is what makes shipping the
+       attribute safe — an element hidden by server markup depends on JS to
+       ever appear, so a broken observer would leave it invisible rather than
+       merely unanimated. And the travel must stay the action's default, which
+       is the distance app.css hides it at.
+
+       tests/interaction/reveal-no-js.spec.ts measures this element with
+       scripting on and off; it is the template's only subject for that spec. -->
+  <div
+    data-reveal
+    use:animateIn={{ failSafe: 2500 }}
+    class="p-6 bg-light rounded text-center max-w-xl"
+  >
+    <code>data-reveal</code> + <code>{`use:animateIn={{ failSafe: 2500 }}`}</code> — hidden in the server
+    markup, so it never paints before it reveals
+  </div>
+
   <p class="text-secondary text-sm">↓</p>
 </div>
 

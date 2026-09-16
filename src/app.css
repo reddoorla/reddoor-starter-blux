@@ -233,6 +233,37 @@ main > section.hero-band:first-child {
 
   /* Type scale — define per project (h1–h6, p, responsive variants). */
 
+  /* The scroll reveal's hidden state, in CSS, so it exists at FIRST PAINT.
+     `use:animateIn` can only hide its targets from JS at hydration, which is
+     150-850ms after the browser has already painted them: content appeared in
+     final position, sat there, then dropped half its height and vanished
+     before floating back. That reads as a broken page load.
+
+     `[data-reveal]` is written by animateIn while an element is hidden and
+     removed the moment it reveals; SERVER-RENDERED markup can carry it too,
+     and must for a given element to be covered at first paint. The inline
+     styles animateIn writes are byte-identical to these declarations, so
+     hydration is a no-op re-write rather than a visible state change — which
+     is why the travel below is animateIn's default `translateY` and not a
+     number of its own (src/reveal-hidden-state.test.ts asserts they agree, and
+     a call site passing its own `translateY` must not ship the attribute).
+
+     The no-JS contract lives in app.html: a <noscript><style> there forces
+     these two properties back with !important, so a browser that will never
+     run the reveal never hides anything. Read that comment before changing
+     either half — it records why the guard is a style and not an inline
+     `html.js` class script.
+
+     An element whose SSR markup carries `data-reveal` depends on JS to ever
+     appear — pair it with animateIn's `failSafe` option, which is what that
+     option is for. */
+  @media (prefers-reduced-motion: no-preference) {
+    [data-reveal] {
+      opacity: 0;
+      transform: translateY(50%);
+    }
+  }
+
   /* Respect users who ask for less motion: neutralize CSS transitions/animations
      and smooth scrolling. Svelte's JS-driven transitions don't see this reset —
      import fade/fly/slide from $lib/transitions instead of svelte/transition.

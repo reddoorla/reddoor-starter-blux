@@ -85,7 +85,25 @@ A Svelte action that attaches fade-up reveal behavior to any element. Defaults t
 <div use:animateIn={{ duration: 1200, delayMax: 0 }}>…</div>
 ```
 
-**Options:** `trigger?: boolean` · `duration?: number` (ms, default `2400`) · `delayMax?: number` (ms, default `400`; viewport mode only — position-based stagger) · `translateY?: string` (default `"50%"`).
+**Options:** `trigger?: boolean` · `duration?: number` (ms, default `2400`) · `delayMax?: number` (ms, default `400`; viewport mode only — position-based stagger) · `translateY?: string` (default `"50%"`) · `stagger?: number` / `index?: number` (viewport mode only — fixed per-step delay for grids and columns) · `failSafe?: number` (ms; viewport mode only — reveal anyway if the reveal has not run by then).
+
+#### Revealing without the flash — `data-reveal`
+
+The action can only hide its target once JS runs, which is well after the browser has painted it: content arrives in final position, sits there, then drops half its height and vanishes before floating back. For an **above-the-fold** element that is worth fixing, and the fix is to ship the hidden state in the server markup:
+
+```svelte
+<div data-reveal use:animateIn={{ failSafe: 2500 }}>…</div>
+```
+
+`app.css` hides `[data-reveal]` (under `prefers-reduced-motion: no-preference`) with the same opacity and the same travel the action writes inline, so the element is already hidden at first paint and hydration is a byte-identical no-op rather than a visible state change. The two halves are asserted against each other in `src/reveal-hidden-state.test.ts`, so they cannot drift.
+
+Three rules come with it, and none is optional:
+
+- **Pair it with `failSafe`.** An element hidden by server markup depends on JS to ever appear, so a broken observer would leave it invisible rather than merely unanimated.
+- **Keep the default `translateY`.** The CSS hides it at that distance; a call site passing its own travel must not ship the attribute, or CSS would hide it somewhere the action does not reveal it from.
+- **Above the fold only.** Below it the flash is nearly unobservable, so the trade — a certain flash for a possible invisible element — does not pay.
+
+Scripting-off browsers are covered by a `<noscript>` style in `app.html` that forces the two properties back, so a reader with JS disabled is never shown less than a crawler reading the SSR HTML gets. `tests/interaction/reveal-no-js.spec.ts` measures all of it; `/dev/animate-in` carries the template's only server-hidden target.
 
 ## Recipes
 
