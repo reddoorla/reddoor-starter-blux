@@ -84,7 +84,7 @@ describe("Field styling", () => {
     expect(cls).toContain("border-secondary");
   });
 
-  it("keeps the forced-colors outline fallback on focus", () => {
+  it("keeps the forced-colors outline fallback on focus (Tailwind v4)", () => {
     // In Tailwind v4 `outline-none` resolves to `outline-style: none` and takes
     // the forced-colors fallback with it; `outline-hidden` keeps the 2px
     // transparent outline the forced-colors palette repaints. Under forced
@@ -94,5 +94,37 @@ describe("Field styling", () => {
     const cls = getByLabelText("A").getAttribute("class") ?? "";
     expect(cls).toContain("focus:outline-hidden");
     expect(cls).not.toContain("focus:outline-none");
+  });
+});
+
+// Modal.svelte finds its initial-focus target by `[autofocus]`; with none, the
+// native dialog-focusing steps land on the first focusable child, which is the
+// ✕ — the exit. Opt-in, and off by default so no page ever grabs focus on load
+// by accident.
+describe("Field autofocus", () => {
+  it("carries no autofocus attribute unless asked", () => {
+    const { getByLabelText } = render(Field, { name: "email", label: "Email" });
+    expect((getByLabelText("Email") as HTMLInputElement).hasAttribute("autofocus")).toBe(false);
+  });
+
+  it("marks the control as the dialog's focus target when autofocus is set", () => {
+    const { getByLabelText } = render(Field, {
+      name: "name",
+      label: "Name",
+      autofocus: true,
+    });
+    expect((getByLabelText("Name") as HTMLInputElement).hasAttribute("autofocus")).toBe(true);
+  });
+
+  it("applies to the textarea as well as the input", () => {
+    // The two controls are a standing source of one-sided fixes in this
+    // component (see "gives the input and the textarea the SAME classes").
+    const { getByLabelText } = render(Field, {
+      name: "msg",
+      label: "Message",
+      type: "textarea",
+      autofocus: true,
+    });
+    expect((getByLabelText("Message") as HTMLTextAreaElement).hasAttribute("autofocus")).toBe(true);
   });
 });
