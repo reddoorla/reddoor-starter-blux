@@ -24,6 +24,36 @@ export const OG_IMAGE_WIDTH = 1200;
 export const OG_IMAGE_HEIGHT = 630;
 
 /**
+ * Route prefixes that must never be indexed: the dev fixtures, the slice
+ * simulator, and Prismic preview URLs (which canonicalize to the real page
+ * anyway).
+ *
+ * ONE list, two consumers — robots.txt's Disallow lines and the layout's
+ * `noindex` meta — because they answer different questions and only one of them
+ * was being asked. `prerender = "auto"` emits the /dev/* fixtures as public
+ * static HTML in the deployed build, and a robots.txt Disallow stops a crawler
+ * FETCHING them but does not stop Google indexing a URL it found elsewhere and
+ * listing it with no snippet. The meta tag is what actually says "not in the
+ * index", and it needs the page to be crawlable to be seen at all. Keeping both
+ * from one constant means adding a prefix cannot fix one and forget the other
+ * (see the drift guard in seo.test.ts and robots.txt/server.test.ts).
+ */
+export const NOINDEX_PREFIXES = ["/dev/", "/slice-simulator", "/preview/"];
+
+/** Whether a pathname falls under NOINDEX_PREFIXES. The trailing slash on
+ *  "/dev/" is load-bearing: "/development" is a content route. */
+export function isNoindexPath(pathname: string): boolean {
+  return NOINDEX_PREFIXES.some((p) => pathname.startsWith(p));
+}
+
+/** Noindex is a PRODUCTION contract, and the vite dev server must NOT enforce
+ *  it: the fleet lighthouse audit scores /dev/a11y-fixtures on `vite dev`, and
+ *  BOTH the robots meta and a robots.txt Disallow fail its is-crawlable audit
+ *  (weight 4 of 13). Vitest also runs with DEV=true but must exercise the
+ *  production contract, hence the MODE escape (vitest sets MODE to "test"). */
+export const NOINDEX_ENFORCED = !import.meta.env.DEV || import.meta.env.MODE === "test";
+
+/**
  * Compose a page's <title>: append "| SITE_NAME" for brand recall, unless the
  * title is empty, is the site name itself (the home page), or already contains
  * it (an editor-authored meta_title that mentions the brand). Falls back to the
