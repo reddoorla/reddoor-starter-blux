@@ -17,13 +17,7 @@
               "config": {
                 "label": "form",
                 "placeholder": "Pick the form this reply answers — one row per form",
-                "options": [
-                  "contact",
-                  "inquiry",
-                  "newsletter",
-                  "rsvp",
-                  "reserve"
-                ]
+                "options": ["contact", "inquiry", "newsletter", "rsvp", "reserve"]
               }
             },
             "subject": {

@@ -8,13 +8,11 @@
   // resolve by stylesheet order, not by the order they were written.
 
   /** Geometry + micro-interaction; carries no colour. */
-  export const buttonBaseClasses =
-    "bump rounded border-2 border-solid px-10 pt-4 pb-3 h-fit";
+  export const buttonBaseClasses = "bump rounded border-2 border-solid px-10 pt-4 pb-3 h-fit";
   /** Default colour skin: outlined dark, inverting on hover. */
   export const buttonSkinClasses = "border-dark hover:bg-dark hover:text-white";
   /** Inverse skin for dark grounds. */
-  export const buttonSkinInverseClasses =
-    "border-white text-white hover:bg-white hover:text-dark";
+  export const buttonSkinInverseClasses = "border-white text-white hover:bg-white hover:text-dark";
 </script>
 
 <script lang="ts">

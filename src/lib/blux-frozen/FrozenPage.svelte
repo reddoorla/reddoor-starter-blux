@@ -1,19 +1,9 @@
 <script lang="ts">
   import { onMount } from "svelte";
 
-  import {
-    enhanceFrozenHtml,
-    FROZEN_ENHANCE_CSS,
-  } from "$lib/blux-frozen/enhance";
-  import {
-    hydrateFrozenMap,
-    type FrozenMapConfig,
-  } from "$lib/blux-frozen/frozen-map";
-  import {
-    substitute,
-    styleTag,
-    type SlotValue,
-  } from "$lib/blux-frozen/substitute";
+  import { enhanceFrozenHtml, FROZEN_ENHANCE_CSS } from "$lib/blux-frozen/enhance";
+  import { hydrateFrozenMap, type FrozenMapConfig } from "$lib/blux-frozen/frozen-map";
+  import { substitute, styleTag, type SlotValue } from "$lib/blux-frozen/substitute";
 
   // Committed map artifacts (`frozen/<uid>.map.json`): one per hydratable map,
   // keyed by its mountId — only configs whose mount exists in this page's DOM
@@ -52,10 +42,7 @@
 
   const values = $derived(
     new Map<string, SlotValue>(
-      slots.map((s) => [
-        s.key,
-        s.kind === "image" ? { url: s.url } : { text: s.text },
-      ]),
+      slots.map((s) => [s.key, s.kind === "image" ? { url: s.url } : { text: s.text }]),
     ),
   );
   const html = $derived(enhanceFrozenHtml(substitute(template, values)));
@@ -77,9 +64,7 @@
     // the original: absolute at top, fixed + same white background after
     // scroll). The nav is out of flow either way, so the flip never shifts
     // layout.
-    const stickyNav = document.querySelector<HTMLElement>(
-      'nav[data-type="sticky"]',
-    );
+    const stickyNav = document.querySelector<HTMLElement>('nav[data-type="sticky"]');
     if (stickyNav) {
       const pin = () => {
         stickyNav.style.position = window.scrollY > 0 ? "fixed" : "absolute";
@@ -92,9 +77,7 @@
     // Mobile menu: the hamburger is a pure-CSS checkbox hack, so without
     // Blux's JS the overlay stays open after tapping an anchor. Close it on
     // any nav-link click.
-    const menuToggle = document.querySelector<HTMLInputElement>(
-      'input[id$="-menuicon"]',
-    );
+    const menuToggle = document.querySelector<HTMLInputElement>('input[id$="-menuicon"]');
     if (menuToggle) {
       const closeMenu = (e: Event) => {
         if ((e.target as HTMLElement).closest("a")) menuToggle.checked = false;
@@ -104,8 +87,7 @@
     }
 
     const reduced =
-      typeof matchMedia !== "undefined" &&
-      matchMedia("(prefers-reduced-motion: reduce)").matches;
+      typeof matchMedia !== "undefined" && matchMedia("(prefers-reduced-motion: reduce)").matches;
     if (!reduced && typeof IntersectionObserver !== "undefined") {
       const io = new IntersectionObserver(
         (entries) => {
@@ -125,9 +107,7 @@
       // visible at load stays put (hiding it would blink: wait-class, then an
       // immediate IO reveal).
       const foldLine = window.innerHeight;
-      for (const el of document.querySelectorAll<HTMLElement>(
-        ".block-effects",
-      )) {
+      for (const el of document.querySelectorAll<HTMLElement>(".block-effects")) {
         if (el.getBoundingClientRect().top > foldLine) {
           el.classList.add("rd-fx-wait");
           io.observe(el);

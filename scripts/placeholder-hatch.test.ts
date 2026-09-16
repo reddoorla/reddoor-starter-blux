@@ -30,15 +30,11 @@ function importUnder(
   if (env.ci) child.CI = "true";
   if (env.netlify) child.NETLIFY = "true";
   if (env.hatch) child.VITE_PRISMIC_ENVIRONMENT = SENTINEL;
-  const r = spawnSync(
-    process.execPath,
-    ["-e", `import(${JSON.stringify(file)})`],
-    {
-      cwd: repoRoot,
-      env: child,
-      encoding: "utf-8",
-    },
-  );
+  const r = spawnSync(process.execPath, ["-e", `import(${JSON.stringify(file)})`], {
+    cwd: repoRoot,
+    env: child,
+    encoding: "utf-8",
+  });
   return { status: r.status, stderr: r.stderr };
 }
 

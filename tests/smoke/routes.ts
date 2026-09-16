@@ -32,8 +32,7 @@ export type SmokeRoute = {
 // override, then slicemachine.config.json). This file runs in the Playwright
 // process, so read process.env rather than import.meta.env.
 const PLACEHOLDER_SENTINEL = "your-prismic-repo-name";
-const repositoryName =
-  process.env.VITE_PRISMIC_ENVIRONMENT || slicemachineConfig.repositoryName;
+const repositoryName = process.env.VITE_PRISMIC_ENVIRONMENT || slicemachineConfig.repositoryName;
 const isPlaceholderRepo = repositoryName === PLACEHOLDER_SENTINEL;
 
 // The env-var route to the sentinel is a LOCAL-ONLY hatch (#120). Under CI or

@@ -4,9 +4,7 @@ import CtaBanner from "./index.svelte";
 
 afterEach(() => cleanup());
 
-const heading = [
-  { type: "heading2", text: "Ready to start your project?", spans: [] },
-];
+const heading = [{ type: "heading2", text: "Ready to start your project?", spans: [] }];
 const link = { link_type: "Web", url: "https://example.com" };
 
 const makeSlice = (primary: Record<string, unknown> = {}) =>
@@ -39,9 +37,7 @@ describe("CtaBanner slice", () => {
     // A navigating CTA is an <a>, never a <button> nested inside one.
     expect(cta.querySelector("button")).toBeNull();
     expect(container.querySelector("button")).toBeNull();
-    expect(
-      container.querySelector('[data-slice-type="cta_banner"]'),
-    ).not.toBeNull();
+    expect(container.querySelector('[data-slice-type="cta_banner"]')).not.toBeNull();
   });
 
   it("paints the selected ground and inverts the button on the dark one", () => {

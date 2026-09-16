@@ -105,17 +105,8 @@ describe("Modal", () => {
     const { getByLabelText } = render(Modal, { open: true, children: body() });
 
     const button = getByLabelText("Close");
-    for (const cls of [
-      "flex",
-      "min-h-11",
-      "min-w-11",
-      "items-center",
-      "justify-center",
-    ]) {
-      expect(
-        button.classList.contains(cls),
-        `close button missing ${cls}`,
-      ).toBe(true);
+    for (const cls of ["flex", "min-h-11", "min-w-11", "items-center", "justify-center"]) {
+      expect(button.classList.contains(cls), `close button missing ${cls}`).toBe(true);
     }
     const icon = button.querySelector("svg")!;
     expect(icon.getAttribute("width")).toBe("20");

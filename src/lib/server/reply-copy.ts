@@ -30,8 +30,7 @@ export async function replyCopyFor(event: RequestEvent, formType: string) {
   // unwritten one: nothing authored, fall back.
   const reader = {
     getSingle: (type: string) => client.getSingle(type as never),
-    getByUID: (type: string, uid: string) =>
-      client.getByUID(type as never, uid),
+    getByUID: (type: string, uid: string) => client.getByUID(type as never, uid),
   };
   return resolveReplyCopy(reader, { formType });
 }
