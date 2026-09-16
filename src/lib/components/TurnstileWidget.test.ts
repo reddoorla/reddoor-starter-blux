@@ -118,4 +118,29 @@ describe("TurnstileWidget", () => {
     expect(api.render).not.toHaveBeenCalled();
     tag.remove();
   });
+
+  it("reserves the widget's box BEFORE the iframe arrives", async () => {
+    // The effect injects a ~65px iframe whenever api.js resolves — a moment
+    // nobody controls. With no reserved box the form jumps at that instant:
+    // everything below the widget, the submit button included, drops ~65px out
+    // from under the cursor.
+    mockEnv.env.PUBLIC_TURNSTILE_SITE_KEY = "site-key";
+    const api = stubTurnstile();
+    const { container } = render(TurnstileWidget);
+
+    // Synchronously after mount, before the effect's loadTurnstile().then has
+    // had a microtask to run: the box must already be in the DOM and still
+    // empty. (Deliberately NOT the <script>-injection path — $lib/turnstile
+    // memoises its loader module-wide, so consuming that path here would
+    // starve the "unmounted while api.js was loading" case below.)
+    const mount = container.querySelector(".cf-turnstile") as HTMLElement;
+    expect(mount).not.toBeNull();
+    expect(api.render).not.toHaveBeenCalled();
+    expect(mount.children.length).toBe(0);
+    // jsdom resolves no Tailwind, so the class token is the assertable form
+    // here; that it really reserves 65px is a browser question, not a jsdom one.
+    expect(mount.className).toContain("min-h-[65px]");
+
+    await vi.waitFor(() => expect(api.render).toHaveBeenCalledTimes(1));
+  });
 });
