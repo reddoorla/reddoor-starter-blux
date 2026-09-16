@@ -11,6 +11,15 @@
   let phone = $state("");
   let message = $state("");
   let submitting = $state(false);
+
+  /** Focused when the confirmation replaces the form. Without this, focus is
+   *  left on a submit button that no longer exists, which drops it to <body> —
+   *  a keyboard or screen-reader user is then sitting at the top of the
+   *  document with no idea the request went through. */
+  let confirmationEl = $state<HTMLElement | null>(null);
+  $effect(() => {
+    if (form?.success) confirmationEl?.focus();
+  });
 </script>
 
 <!--
@@ -33,7 +42,15 @@
 
   <!-- One-and-done: on success the form unmounts. To allow another submission, keep the form mounted and reset the field state instead. -->
   {#if form?.success}
-    <p role="status" class="border-2 border-green-600 bg-green-50 rounded p-4 text-green-900">
+    <!-- tabindex=-1 so the effect above can move focus here; role=status
+         announces it to assistive tech without stealing the reading position
+         from someone who is already elsewhere on the page. -->
+    <p
+      bind:this={confirmationEl}
+      role="status"
+      tabindex="-1"
+      class="border-2 border-green-600 bg-green-50 rounded p-4 text-green-900"
+    >
       Thanks — your message is on its way. We'll be in touch soon.
     </p>
   {:else}
@@ -93,10 +110,19 @@
            dashboard holds TURNSTILE_SECRET_KEY; sites carry only the public key). -->
       <TurnstileWidget />
 
+      <!-- The last click in the flow, and it used to acknowledge the wait by
+           DIMMING itself: `disabled:opacity-60` composited the label against a
+           faded button at the exact moment someone is waiting on it and
+           deciding whether to click again — the least readable state on the
+           page, during the only wait it has. The sending state now keeps label
+           and background at full strength and says so instead: `aria-busy` so
+           the change reaches a screen reader rather than only the accessible
+           name silently mutating, and a wait cursor for everyone else. -->
       <button
         type="submit"
         disabled={submitting}
-        class="px-4 py-2 bg-primary text-white rounded bump disabled:opacity-60"
+        aria-busy={submitting}
+        class="px-4 py-2 bg-primary text-white rounded bump disabled:cursor-wait"
       >
         {submitting ? "Sending…" : "Send message"}
       </button>
