@@ -52,6 +52,8 @@ A library of responsive, reusable components designed to be used within Prismic 
 - **UI** — `Accordion`, `BrandIcon`, `DefaultButton`, `DelayedLink`, `Nav`, `Footer`, `ScaleTextToContainer`
 - **Forms** — `TurnstileWidget` (optional Cloudflare Turnstile challenge; dark until `PUBLIC_TURNSTILE_SITE_KEY` is set), plus `Field`/`Form` primitives used by the contact form
 
+`LandscapeModal` ships as a primitive but is deliberately **not mounted**. An opaque, undismissable overlay on a phone held sideways fails WCAG 2.1 SC 1.3.4 (Orientation), and every clone inherited it until reddoor-starter#121; `tests/smoke/landscape.spec.ts` fails if a layout mounts it again. A site whose content genuinely cannot render in landscape can still mount it on purpose — paired with a way out. Its own accessibility tests keep running, but no axe or smoke gate covers it in a page, because no page renders it.
+
 `BrandIcon` renders CC0 [simple-icons](https://simpleicons.org/) social glyphs (`facebook`, `x`/`twitter`, `reddit`, `instagram`, `linkedin`) in `currentColor`; it is decorative, so put the accessible name on the wrapping link.
 
 - **Layout** — `ContentWidth`, `ScreenWidthMedia` (poster-first background video: idle-deferred iframe, quality-ramp reveal, reduced-motion poster only), `TransitionOverlay`
