@@ -235,14 +235,26 @@ main > section.hero-band:first-child {
 
   /* Respect users who ask for less motion: neutralize CSS transitions/animations
      and smooth scrolling. Svelte's JS-driven transitions don't see this reset —
-     import fade/fly/slide from $lib/transitions instead of svelte/transition. */
+     import fade/fly/slide from $lib/transitions instead of svelte/transition.
+     The DELAYS have to go too, not just the durations: a zero-length animation
+     that still waits out its delay is "nothing happens, then it pops", which is
+     worse than the motion it replaced — a staggered reveal sits through its
+     whole cascade and then snaps in.
+     NOT COVERED: scroll-driven animations. An element on
+     `animation-timeline: scroll(root)` has no duration for this block to zero,
+     so the first component to reach for `animation-timeline: view()` or
+     `scroll()` must ship its own `@media (prefers-reduced-motion: reduce)`
+     opt-out (`animation-timeline: auto` plus a static resting state). Nothing
+     here will do it for you. */
   @media (prefers-reduced-motion: reduce) {
     *,
     *::before,
     *::after {
       animation-duration: 0.01ms !important;
+      animation-delay: 0ms !important;
       animation-iteration-count: 1 !important;
       transition-duration: 0.01ms !important;
+      transition-delay: 0ms !important;
       scroll-behavior: auto !important;
     }
   }

@@ -1,4 +1,4 @@
-import { describe, it, expect, beforeEach, vi } from "vitest";
+import { describe, it, expect, beforeEach, afterEach, vi } from "vitest";
 import { animateIn } from "./animateIn";
 
 class FakeIntersectionObserver {
@@ -347,5 +347,58 @@ describe("animateIn — prefers-reduced-motion", () => {
 
     expect(el.style.opacity).toBe("");
     expect(el.style.transition).toBe("");
+  });
+});
+
+// The preference is watched, not sampled once at mount: turning Reduce Motion
+// on mid-session must stop the reveals where the reader is, rather than on
+// their next reload. It only ever moves in the SAFE direction — whatever is
+// hidden is revealed and the machinery torn down. Re-hiding on a switch would
+// strand content at opacity 0 with nothing left running to un-hide it.
+describe("animateIn: reduced motion turned on mid-session", () => {
+  let listeners: Set<(e: MediaQueryListEvent) => void>;
+  let matches: boolean;
+
+  beforeEach(() => {
+    listeners = new Set();
+    matches = false;
+    window.matchMedia = vi.fn().mockImplementation((query: string) => ({
+      matches: query.includes("prefers-reduced-motion") ? matches : false,
+      media: query,
+      addEventListener: (_: string, fn: (e: MediaQueryListEvent) => void) => listeners.add(fn),
+      removeEventListener: (_: string, fn: (e: MediaQueryListEvent) => void) =>
+        listeners.delete(fn),
+      addListener: () => {},
+      removeListener: () => {},
+      onchange: null,
+      dispatchEvent: () => false,
+    })) as unknown as typeof window.matchMedia;
+    vi.stubGlobal(
+      "IntersectionObserver",
+      class {
+        observe() {}
+        unobserve() {}
+        disconnect() {}
+      },
+    );
+  });
+
+  afterEach(() => {
+    vi.unstubAllGlobals();
+    vi.restoreAllMocks();
+  });
+
+  it("reveals an element it had hidden, instead of stranding it invisible", () => {
+    const node = document.createElement("div");
+    document.body.appendChild(node);
+    const handle = animateIn(node);
+    expect(node.style.opacity).toBe("0");
+
+    matches = true;
+    for (const fn of [...listeners]) fn({ matches: true } as MediaQueryListEvent);
+
+    expect(node.style.opacity, "content left stranded at opacity 0").toBe("1");
+    handle.destroy();
+    node.remove();
   });
 });
