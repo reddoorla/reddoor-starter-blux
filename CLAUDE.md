@@ -37,6 +37,32 @@ native starter, which has diverged.
   `tests/smoke/routes.ts` refuse to load under that combination
   (reddoor-starter#120, picked from `ff0b6d8`).
 
+## Deploy: a Prismic publish needs a Netlify build hook
+
+`prerender = "auto"` bakes content routes at build time, so a publish reaches
+visitors only when Netlify builds — and out of the box only a git push does
+that. Every site cloned from this template shares the gap, and it hides well:
+the document reads published, Prismic preview renders it, and the next PR's
+deploy preview renders it, so production is the only wrong surface until an
+unrelated push silently fixes it. Found on 29-navy (`reddoorla/29-navy#31`),
+where no publish had ever reached production in the life of the site.
+
+Per site, once:
+
+```bash
+netlify api createSiteBuildHook \
+  --data '{"site_id":"<site-id>","body":{"title":"Prismic publish","branch":"main"}}'
+netlify api listSiteBuildHooks --data '{"site_id":"<site-id>"}'
+```
+
+Body fields must nest under `body` — passed flat the CLI exits 0 having created
+a hook with `title: null, branch: null`, which is why the read-back is part of
+the step. Paste the returned URL into Prismic → Settings → Webhooks, triggering
+on publish, then prove it by publishing a trivial string and grepping
+production for it. A green Netlify deploy is not the proof; deploys fire on
+pushes too. The native track carries the full three-step version in
+`docs/NEW-SITE.md` (reddoor-starter#129).
+
 ## The work journal
 
 **Every working session appends a dated entry to `docs/workJournal.md`** — what
