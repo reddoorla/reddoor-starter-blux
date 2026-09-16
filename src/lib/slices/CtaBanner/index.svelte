@@ -17,9 +17,7 @@
   };
   let { slice, context = {} }: Props = $props();
 
-  const band = $derived(
-    bandFor(context.presentation, slice.primary.band ?? null),
-  );
+  const band = $derived(bandFor(context.presentation, slice.primary.band ?? null));
 
   // A Blux band paints its own ground (block style + background media from the
   // manifest), so the select stands down inside one rather than stacking a
@@ -80,11 +78,7 @@
 {/snippet}
 
 {#if band}
-  <BluxSectionBand
-    {band}
-    sliceType={slice.slice_type}
-    sliceVariation={slice.variation}
-  >
+  <BluxSectionBand {band} sliceType={slice.slice_type} sliceVariation={slice.variation}>
     {@render content()}
   </BluxSectionBand>
 {:else}

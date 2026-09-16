@@ -7,8 +7,7 @@ const slicemachine = JSON.parse(
 );
 const PLACEHOLDER_SENTINEL = "your-prismic-repo-name";
 const isPlaceholderRepo =
-  (process.env.VITE_PRISMIC_ENVIRONMENT || slicemachine.repositoryName) ===
-  PLACEHOLDER_SENTINEL;
+  (process.env.VITE_PRISMIC_ENVIRONMENT || slicemachine.repositoryName) === PLACEHOLDER_SENTINEL;
 
 // The env-var route to the sentinel is a LOCAL-ONLY hatch (#120). Set in CI
 // or on Netlify it makes `entries()` return [] so `/` is never prerendered,
@@ -37,9 +36,9 @@ if (
 // loudly on a genuine broken in-page anchor).
 let isFrozenSite = false;
 try {
-  isFrozenSite = readdirSync(
-    new URL("./src/lib/blux-frozen/frozen", import.meta.url),
-  ).some((f) => f.endsWith(".html"));
+  isFrozenSite = readdirSync(new URL("./src/lib/blux-frozen/frozen", import.meta.url)).some((f) =>
+    f.endsWith(".html"),
+  );
 } catch {
   // no frozen artifact dir → not a frozen site
 }
@@ -63,8 +62,7 @@ const mapsHosts = [
 /** @type {import('@sveltejs/kit').Config} */
 const config = {
   compilerOptions: {
-    warningFilter: (warning) =>
-      warning.code !== "element_invalid_self_closing_tag",
+    warningFilter: (warning) => warning.code !== "element_invalid_self_closing_tag",
   },
   kit: {
     adapter: adapter(),

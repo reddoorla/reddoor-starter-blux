@@ -1,13 +1,9 @@
 import * as prismic from "@prismicio/client";
-import {
-  enableAutoPreviews,
-  type CreateClientConfig,
-} from "@prismicio/svelte/kit";
+import { enableAutoPreviews, type CreateClientConfig } from "@prismicio/svelte/kit";
 import config from "../../slicemachine.config.json";
 import { frozenArtifacts } from "./blux-frozen/artifacts";
 
-export const repositoryName =
-  import.meta.env.VITE_PRISMIC_ENVIRONMENT || config.repositoryName;
+export const repositoryName = import.meta.env.VITE_PRISMIC_ENVIRONMENT || config.repositoryName;
 
 /**
  * True when the starter has not yet been wired to a real Prismic repository.
@@ -48,10 +44,7 @@ export const linkResolver: prismic.LinkResolverFunction = (doc) => {
   return null;
 };
 
-export const createClient = ({
-  cookies,
-  ...config
-}: CreateClientConfig = {}) => {
+export const createClient = ({ cookies, ...config }: CreateClientConfig = {}) => {
   const client = prismic.createClient(repositoryName, config);
 
   enableAutoPreviews({ client, cookies });

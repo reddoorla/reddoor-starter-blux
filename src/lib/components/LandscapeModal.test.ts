@@ -29,9 +29,7 @@ function mockMatchMedia(coarse: boolean, landscape: boolean) {
 // jsdom performs no layout — treat connected elements as visible so
 // trapFocus's getClientRects() filter keeps them.
 beforeEach(() => {
-  vi.spyOn(Element.prototype, "getClientRects").mockImplementation(function (
-    this: Element,
-  ) {
+  vi.spyOn(Element.prototype, "getClientRects").mockImplementation(function (this: Element) {
     return (this.isConnected ? [{}] : []) as unknown as DOMRectList;
   });
 });
@@ -57,9 +55,7 @@ describe("LandscapeModal", () => {
     const dialog = getByRole("dialog");
     expect(dialog.getAttribute("aria-modal")).toBe("true");
     expect(dialog.getAttribute("aria-labelledby")).toBe("landscape-heading");
-    expect(dialog.querySelector("#landscape-heading")?.textContent).toMatch(
-      /portrait/i,
-    );
+    expect(dialog.querySelector("#landscape-heading")?.textContent).toMatch(/portrait/i);
   });
 
   // A fixed full-viewport overlay that leaves focus on the hidden page behind

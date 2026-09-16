@@ -62,8 +62,7 @@ export function rewriteCfEmails(html: string): string {
     )
     .replace(
       /(<[^>]*data-cfemail="([0-9a-fA-F]+)"[^>]*>)[^<]*(<)/g,
-      (_, open: string, hex: string, close: string) =>
-        `${open}${decodeCfEmail(hex)}${close}`,
+      (_, open: string, hex: string, close: string) => `${open}${decodeCfEmail(hex)}${close}`,
     );
 }
 

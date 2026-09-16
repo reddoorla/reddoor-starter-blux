@@ -20,9 +20,7 @@ describe("rewriteHashlinks", () => {
 
   it("applies per-site overrides when a measured target differs from page-block-N", () => {
     const html = '<a class="navigation0ullia data-hashlink" href="/#11">C</a>';
-    expect(rewriteHashlinks(html, { "11": "footer0" })).toContain(
-      'href="#footer0"',
-    );
+    expect(rewriteHashlinks(html, { "11": "footer0" })).toContain('href="#footer0"');
   });
 
   it("leaves named anchors, plain roots, and external urls alone", () => {
@@ -35,9 +33,7 @@ describe("rewriteHashlinks", () => {
 
 describe("decodeCfEmail", () => {
   it("decodes a real payload from the-pointe's footer", () => {
-    expect(decodeCfEmail("7e2a111a1a503a11101b073e1d1c0c1b501d1113")).toBe(
-      "Todd.Doney@cbre.com",
-    );
+    expect(decodeCfEmail("7e2a111a1a503a11101b073e1d1c0c1b501d1113")).toBe("Todd.Doney@cbre.com");
   });
 });
 
@@ -72,9 +68,7 @@ describe("enhanceFrozenHtml + css", () => {
   });
 
   it("re-centers the map plus/minus glyph relatively (both states)", () => {
-    expect(FROZEN_ENHANCE_CSS).toContain(
-      ".map_icon_plusm:before{top:calc(50% - 7px)",
-    );
+    expect(FROZEN_ENHANCE_CSS).toContain(".map_icon_plusm:before{top:calc(50% - 7px)");
     expect(FROZEN_ENHANCE_CSS).toContain(
       '.map_icon[data-clicked="1"] .map_icon_plusm:before{top:50%;height:0}',
     );
