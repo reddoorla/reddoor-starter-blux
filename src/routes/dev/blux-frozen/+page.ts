@@ -8,7 +8,12 @@ import manifest from "./the-pointe.slots.json";
 // render matches the live layout (15333px) with no residual tokens. Regen via
 //   node dist/cli/bin.js blux freeze ~/Desktop/thePointe --out <tmp> --site the-pointe
 //   cp <tmp>/frozen/the-pointe.{html,style.css} <tmp>/the-pointe.slots.json this-dir/
-export const prerender = true;
+// #717: this was `true`, which baked a dev-only fixture into the production
+// build AND would run the /dev layout guard at build time, where `dev` is
+// already false — failing the BUILD rather than the request. The Playwright
+// fidelity gate drives this route on the dev server, so nothing needs it
+// prerendered.
+export const prerender = false;
 
 export function load() {
   return {
