@@ -41,6 +41,46 @@
     isMenuOpen = false;
     openMobileIndex = null;
   };
+
+  /** The overlay's id, so the trigger and the Close can both point at it. The
+   *  trigger unmounts while the menu is open and the overlay renders its own
+   *  Close in the same slot, so no single element can carry a flipping
+   *  aria-expanded — `[aria-controls="nav-menu"]` is the stable handle whose
+   *  state reads false then true across the swap. */
+  const MENU_ID = "nav-menu";
+
+  // Press feedback that actually fires on touch. `hover:` compiles behind
+  // `@media (hover: hover)`, so a phone got no acknowledgement at all from the
+  // site's only navigation control — and a tap that looks like nothing happened
+  // gets tapped again, the second tap landing after the overlay has mounted and
+  // closing it again. `:active` alone would not fix it: a dispatched touchStart
+  // leaves `matches(":active")` FALSE in Chromium (measured on
+  // beachfront-dentistry at 1440 and 390, held 600ms), so the press is driven by
+  // POINTER events and surfaced as `data-pressed`. The `group-active:` variants
+  // ride alongside purely for keyboard Space, which browsers do deliver as
+  // `:active` and which produces no pointer event.
+  //
+  // Cleared on up/cancel/leave/blur so a finger that slides off the control, or
+  // a drag the browser turns into a scroll, never leaves it stuck looking held.
+  let pressedControl = $state<string | null>(null);
+  const pressProps = (key: string) => ({
+    "data-pressed": pressedControl === key ? "" : undefined,
+    onpointerdown: () => (pressedControl = key),
+    onpointerup: () => (pressedControl = null),
+    onpointercancel: () => (pressedControl = null),
+    onpointerleave: () => (pressedControl = null),
+    onblur: () => (pressedControl = null),
+  });
+
+  // Additive and monochrome on purpose: the glyph dips while held. Beachfront's
+  // coloured brand pill is NOT ported — this template ships a neutral
+  // placeholder palette with no brand colourway to key it to. The focus ring
+  // comes from app.css's `:focus-visible` floor (#133), so neither control
+  // needs one of its own.
+  const ICON_GLYPH =
+    "inline-flex items-center justify-center transition-[opacity,scale] duration-150 ease-out " +
+    "motion-reduce:transition-none group-active:scale-90 group-active:opacity-70 " +
+    "group-data-[pressed]:scale-90 group-data-[pressed]:opacity-70";
 </script>
 
 {#if useNavLinks}
@@ -59,11 +99,16 @@
       <button
         bind:this={openButtonEl}
         type="button"
-        class="flex min-h-11 min-w-11 items-center justify-center lg:hidden"
+        class="group flex min-h-11 min-w-11 items-center justify-center lg:hidden"
         onclick={openMenu}
         aria-label="Open menu"
+        aria-expanded={isMenuOpen}
+        aria-controls={MENU_ID}
+        {...pressProps("trigger")}
       >
-        <Menu size={24} />
+        <span class={ICON_GLYPH}>
+          <Menu size={24} />
+        </span>
       </button>
     {/if}
   </nav>
@@ -138,11 +183,16 @@
         <button
           bind:this={openButtonEl}
           type="button"
-          class="flex min-h-11 min-w-11 items-center justify-center lg:hidden"
+          class="group flex min-h-11 min-w-11 items-center justify-center lg:hidden"
           onclick={openMenu}
           aria-label="Open menu"
+          aria-expanded={isMenuOpen}
+          aria-controls={MENU_ID}
+          {...pressProps("trigger")}
         >
-          <Menu size={24} />
+          <span class={ICON_GLYPH}>
+            <Menu size={24} />
+          </span>
         </button>
       {/if}
     {/if}
@@ -158,17 +208,23 @@
       role="dialog"
       aria-modal="true"
       aria-label="Menu"
+      id={MENU_ID}
       class="fixed inset-0 z-50 flex h-dvh w-screen flex-col items-center justify-center gap-8 bg-background lg:hidden"
       transition:fade
       use:trapFocus={{ onEscape: closeMenu, restoreFocus: () => openButtonEl }}
     >
       <button
         type="button"
-        class="absolute top-4 right-8 flex min-h-11 min-w-11 items-center justify-center"
+        class="group absolute top-4 right-8 flex min-h-11 min-w-11 items-center justify-center"
         onclick={closeMenu}
         aria-label="Close menu"
+        aria-expanded={isMenuOpen}
+        aria-controls={MENU_ID}
+        {...pressProps("close")}
       >
-        <X size={24} />
+        <span class={ICON_GLYPH}>
+          <X size={24} />
+        </span>
       </button>
 
       {#each navLinks as link (link.href)}
@@ -180,17 +236,23 @@
       role="dialog"
       aria-modal="true"
       aria-label="Menu"
+      id={MENU_ID}
       class="fixed inset-0 z-50 flex h-dvh w-screen flex-col items-center justify-center gap-4 overflow-y-auto bg-background py-20 lg:hidden"
       transition:fade
       use:trapFocus={{ onEscape: closeMenu, restoreFocus: () => openButtonEl }}
     >
       <button
         type="button"
-        class="absolute top-4 right-8 flex min-h-11 min-w-11 items-center justify-center"
+        class="group absolute top-4 right-8 flex min-h-11 min-w-11 items-center justify-center"
         onclick={closeMenu}
         aria-label="Close menu"
+        aria-expanded={isMenuOpen}
+        aria-controls={MENU_ID}
+        {...pressProps("close")}
       >
-        <X size={24} />
+        <span class={ICON_GLYPH}>
+          <X size={24} />
+        </span>
       </button>
 
       {#each items as item, i (i)}
