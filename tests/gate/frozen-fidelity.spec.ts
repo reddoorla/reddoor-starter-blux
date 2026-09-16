@@ -19,16 +19,10 @@ const allowed = (s: string) => ALLOWED_CONSOLE.some((re) => re.test(s));
 // ~530px shorter (~14800px) and the height check misfires. Pin it to 1440.
 test.use({ viewport: { width: 1440, height: 900 } });
 
-test("frozen the-pointe renders faithfully: ~15333px, 56 media, no tokens", async ({
-  page,
-}) => {
+test("frozen the-pointe renders faithfully: ~15333px, 56 media, no tokens", async ({ page }) => {
   const errors: string[] = [];
   page.on("console", (m: ConsoleMessage) => {
-    if (
-      m.type() === "error" &&
-      !allowed(m.text()) &&
-      !allowed(m.location()?.url ?? "")
-    ) {
+    if (m.type() === "error" && !allowed(m.text()) && !allowed(m.location()?.url ?? "")) {
       errors.push(m.text());
     }
   });

@@ -12,12 +12,9 @@ const mods = import.meta.glob("./frozen/*.map.json", { eager: true }) as Record<
   string,
   { default: FrozenMapConfig }
 >;
-const configs: [uid: string, config: FrozenMapConfig][] = Object.entries(
-  mods,
-).map(([path, mod]) => [
-  path.slice(path.lastIndexOf("/") + 1, -9),
-  mod.default,
-]);
+const configs: [uid: string, config: FrozenMapConfig][] = Object.entries(mods).map(
+  ([path, mod]) => [path.slice(path.lastIndexOf("/") + 1, -9), mod.default],
+);
 
 describe("frozen map artifacts", () => {
   // Reverse presence: the freeze bakes `data-kml-mid` onto every KML map
@@ -39,9 +36,7 @@ describe("frozen map artifacts", () => {
   it("each targets a mount that exists in its page's frozen template", () => {
     for (const [uid, config] of configs) {
       expect(config.mid).toMatch(/^[\w-]{10,}$/);
-      expect(frozenArtifacts[uid]?.template).toContain(
-        `id="${config.mountId}"`,
-      );
+      expect(frozenArtifacts[uid]?.template).toContain(`id="${config.mountId}"`);
     }
   });
 
@@ -53,9 +48,7 @@ describe("frozen map artifacts", () => {
         expect(l.lid).toBeTruthy();
       }
       // Without a viewport-seeding layer the map opens on a default world view.
-      const seeds = config.layers.filter(
-        (l) => l.initiallyVisible && l.preserveViewport === false,
-      );
+      const seeds = config.layers.filter((l) => l.initiallyVisible && l.preserveViewport === false);
       expect(seeds.length).toBeGreaterThanOrEqual(1);
     }
   });
