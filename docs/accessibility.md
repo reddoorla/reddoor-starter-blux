@@ -11,6 +11,7 @@ This starter targets **WCAG 2.2 Level AA**. Accessibility is treated as a defaul
   - [Modal](../src/lib/components/Modal.svelte) — native `<dialog>` with backdrop, ESC-to-close, and implicit focus trap.
   - [Slider](../src/lib/components/Animation/Slider.svelte) — `aria-roledescription="carousel"`, per-slide controls with `aria-current`.
   - [Form / Field](../src/lib/components/Form.svelte) — every input has a programmatic label, required fields announce "(required)" to screen readers, errors link via `aria-describedby` and surface in a focused error summary.
+- **A keyboard-focus floor** — every link, button, `<summary>` and tabbable element gets a 2px `:focus-visible` outline from [app.css](../src/app.css), so a component that ships no ring of its own is still keyboard-navigable (WCAG 2.4.7). Authored `focus-visible:ring-*` utilities still win: the floor is written with `:where()`, which contributes zero specificity.
 - **`prefers-reduced-motion` honored** in animation primitives ([animateIn.ts:51](../src/lib/actions/animateIn.ts#L51)) — users with the OS preference get no transform, no transition, immediate reveal.
 - **Compiler-level a11y warnings** via Svelte's built-in checks (run on `pnpm lint`).
 

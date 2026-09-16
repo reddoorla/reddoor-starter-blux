@@ -247,6 +247,19 @@ main > section.hero-band:first-child {
     }
   }
 
+  /* Keyboard focus floor (WCAG 2.4.7). Focus styling in this template is opt-in
+     per component, and anything without a ring of its own fell back to the UA's
+     1px hairline — invisible on a dark nav or over a photo hero. This is the
+     base every interactive element gets for free.
+     `:where()` contributes ZERO specificity, so the whole selector weighs one
+     pseudo-class and every authored `focus-visible:ring-*` utility still wins
+     twice over: higher specificity AND a later cascade layer than `base`. Form
+     controls are deliberately absent — Field.svelte styles its own. */
+  :where(a, button, summary, [tabindex]:not([tabindex="-1"])):focus-visible {
+    outline: 2px solid var(--color-primary);
+    outline-offset: 2px;
+  }
+
   a,
   button {
     cursor: pointer;

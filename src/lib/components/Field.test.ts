@@ -58,3 +58,41 @@ describe("Field", () => {
     expect(textarea.tagName).toBe("TEXTAREA");
   });
 });
+
+// The control's skin, which had two defects a class list cannot show you.
+describe("Field styling", () => {
+  it("gives the input and the textarea the SAME classes", () => {
+    // They carried two copy-pasted class lists, which is exactly how a fix
+    // lands on one control and not the other — the invisible border below had
+    // to be changed in two places.
+    const input = render(Field, { name: "a", label: "A" });
+    const inputClass = input.getByLabelText("A").getAttribute("class");
+    input.unmount();
+
+    const area = render(Field, { name: "b", label: "B", type: "textarea" });
+    expect(area.getByLabelText("B").getAttribute("class")).toBe(inputClass);
+  });
+
+  it("draws a resting border that clears the 3:1 non-text minimum", () => {
+    // --color-light is #e5e7eb: 1.20:1 against the white card, so the fields
+    // read as invisible boxes and a visitor has to hunt for where to type.
+    // WCAG 1.4.11 wants 3:1 for a control's boundary. --color-secondary
+    // (#6b7280) is 4.83:1.
+    const { getByLabelText } = render(Field, { name: "a", label: "A" });
+    const cls = getByLabelText("A").getAttribute("class") ?? "";
+    expect(cls).not.toContain("border-light");
+    expect(cls).toContain("border-secondary");
+  });
+
+  it("keeps the forced-colors outline fallback on focus", () => {
+    // In Tailwind v4 `outline-none` resolves to `outline-style: none` and takes
+    // the forced-colors fallback with it; `outline-hidden` keeps the 2px
+    // transparent outline the forced-colors palette repaints. Under forced
+    // colours the ring is dropped by the engine, so that outline is the only
+    // focus affordance left.
+    const { getByLabelText } = render(Field, { name: "a", label: "A" });
+    const cls = getByLabelText("A").getAttribute("class") ?? "";
+    expect(cls).toContain("focus:outline-hidden");
+    expect(cls).not.toContain("focus:outline-none");
+  });
+});
