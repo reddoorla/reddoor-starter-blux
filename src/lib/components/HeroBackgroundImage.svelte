@@ -34,6 +34,15 @@
     preload = true,
   }: Props = $props();
 
+  // `preload` says "this instance is the LCP". It used to gate only the
+  // <link rel=preload>, while the <img> claimed fetchpriority="high"
+  // unconditionally — so a secondary hero still competed with the real LCP for
+  // bandwidth at highest priority, which is the whole thing `preload={false}`
+  // exists to prevent. The component's own test asserted that behaviour, which
+  // is how it survived: it pinned the bug rather than the contract.
+  const fetchpriority = $derived(preload ? "high" : "auto");
+  const loading = $derived(preload ? "eager" : "lazy");
+
   const src = $derived(imgix(image?.url, { w: 1920 }));
   const candidates = $derived(srcset(image?.url));
   const alt = $derived(image?.alt || altFallback);
@@ -60,7 +69,8 @@
     width={image.dimensions?.width}
     height={image.dimensions?.height}
     {alt}
-    fetchpriority="high"
+    {fetchpriority}
+    {loading}
     decoding="async"
     class={passedClasses}
   />

@@ -53,7 +53,28 @@ describe("HeroBackgroundImage", () => {
     expect(document.head.querySelector("link[rel='preload']")).toBeNull();
     const img = container.querySelector("img")!;
     expect(img.src).toContain("w=1920");
+  });
+
+  // This assertion used to read `.toBe("high")` under preload={false} — the
+  // test PINNED the bug. Dropping the <link> while leaving the <img> at
+  // fetchpriority=high does not stop a secondary hero competing with the LCP;
+  // it only stops it being preloaded. An instance that opted out of being the
+  // LCP must also stop claiming the bandwidth of one.
+  it("de-prioritises an instance that is not the LCP", () => {
+    const { container } = render(HeroBackgroundImage, {
+      image: prismicImage(),
+      preload: false,
+    });
+    const img = container.querySelector("img")!;
+    expect(img.getAttribute("fetchpriority")).toBe("auto");
+    expect(img.getAttribute("loading")).toBe("lazy");
+  });
+
+  it("keeps the LCP hero eager and high-priority", () => {
+    const { container } = render(HeroBackgroundImage, { image: prismicImage() });
+    const img = container.querySelector("img")!;
     expect(img.getAttribute("fetchpriority")).toBe("high");
+    expect(img.getAttribute("loading")).toBe("eager");
   });
 
   it("passes non-Prismic URLs through untouched, with no srcset", () => {
