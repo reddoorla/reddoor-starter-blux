@@ -18,6 +18,13 @@
     pattern?: string;
     inputmode?: HTMLInputAttributes["inputmode"];
     rows?: number;
+    /** Marks this control as the one a containing dialog should open onto.
+     *  Modal.svelte looks for `[autofocus]` after showModal(); without it the
+     *  native dialog-focusing steps land on the first focusable child, which is
+     *  the ✕ — the exit. Only ever set it on ONE field per dialog, and only
+     *  inside a dialog: on a plain page an autofocused control steals focus on
+     *  load and skips whatever precedes it. */
+    autofocus?: boolean;
   }
 
   let {
@@ -35,6 +42,7 @@
     pattern,
     inputmode,
     rows = 4,
+    autofocus = false,
   }: Props = $props();
 
   const uid = $props.id();
@@ -82,6 +90,7 @@
   {/if}
 
   {#if type === "textarea"}
+    <!-- svelte-ignore a11y_autofocus -->
     <textarea
       id={inputId}
       {name}
@@ -91,11 +100,13 @@
       {minlength}
       {maxlength}
       {autocomplete}
+      {autofocus}
       bind:value
       aria-describedby={describedBy}
       aria-invalid={error ? "true" : undefined}
       class={controlClass}></textarea>
   {:else}
+    <!-- svelte-ignore a11y_autofocus -->
     <input
       id={inputId}
       {type}
@@ -107,6 +118,7 @@
       {pattern}
       {autocomplete}
       {inputmode}
+      {autofocus}
       bind:value
       aria-describedby={describedBy}
       aria-invalid={error ? "true" : undefined}
