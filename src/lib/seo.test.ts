@@ -5,6 +5,9 @@ import {
   resolveOgImage,
   organizationJsonLd,
   composeTitle,
+  isNoindexPath,
+  NOINDEX_ENFORCED,
+  NOINDEX_PREFIXES,
   OG_IMAGE_WIDTH,
   OG_IMAGE_HEIGHT,
 } from "./seo";
@@ -151,5 +154,49 @@ describe("organizationJsonLd", () => {
       sameAs: [],
     }) as Record<string, unknown>;
     expect("sameAs" in ld).toBe(false);
+  });
+});
+
+// robots.txt's Disallow and the layout's `noindex` meta answer DIFFERENT
+// questions — "don't fetch this" vs "don't list this" — and only the first was
+// being asked. `prerender = "auto"` emits the /dev/* fixtures as public static
+// HTML in the deployed build, and a Disallow does not stop Google indexing a
+// URL it discovered elsewhere and listing it with no snippet. Both now come
+// from NOINDEX_PREFIXES; these keep them from drifting apart again.
+describe("noindex routes", () => {
+  it("covers the dev fixtures, the slice simulator and preview URLs", () => {
+    expect(NOINDEX_PREFIXES).toEqual(["/dev/", "/slice-simulator", "/preview/"]);
+  });
+
+  it("marks every dev/tooling route noindex", () => {
+    for (const p of [
+      "/dev/a11y-fixtures",
+      "/dev/animate-in",
+      "/slice-simulator",
+      "/preview/about",
+    ]) {
+      expect(isNoindexPath(p), p).toBe(true);
+    }
+  });
+
+  it("leaves every real content route indexable", () => {
+    for (const p of ["/", "/about", "/contact", "/work/case-study"]) {
+      expect(isNoindexPath(p), p).toBe(false);
+    }
+  });
+
+  it("does not match a content route that merely starts with the same letters", () => {
+    // "/development" must not be caught by the "/dev/" prefix — the trailing
+    // slash is load-bearing.
+    expect(isNoindexPath("/development")).toBe(false);
+    expect(isNoindexPath("/work/dev/x")).toBe(false);
+  });
+
+  // Noindex is a PRODUCTION contract. The fleet lighthouse audit scores
+  // /dev/a11y-fixtures on `vite dev`, where both a robots meta and a robots.txt
+  // Disallow fail its is-crawlable audit — so the fence drops on the dev server
+  // only. Vitest also runs with DEV=true, hence the MODE escape it relies on.
+  it("is enforced under the test runner, which stands in for production", () => {
+    expect(NOINDEX_ENFORCED).toBe(true);
   });
 });

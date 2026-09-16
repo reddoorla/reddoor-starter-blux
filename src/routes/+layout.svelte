@@ -5,7 +5,7 @@
   import { repositoryName } from "$lib/prismicio";
   import "../app.css";
   import Seo from "$lib/components/Seo.svelte";
-  import { composeTitle, DEFAULT_OG_IMAGE } from "$lib/seo";
+  import { composeTitle, DEFAULT_OG_IMAGE, isNoindexPath, NOINDEX_ENFORCED } from "$lib/seo";
   import TransitionOverlay from "$lib/components/TransitionOverlay.svelte";
   import Nav from "$lib/components/Nav.svelte";
   import Footer from "$lib/components/Footer.svelte";
@@ -34,6 +34,7 @@
   image={page.data.meta_image || DEFAULT_OG_IMAGE || undefined}
   imageAlt={page.data.meta_image_alt}
   url={page.url}
+  noindex={NOINDEX_ENFORCED && isNoindexPath(page.url.pathname)}
 />
 {#if page.data.frozen}
   <!-- A frozen Blux page is a complete standalone document (its own nav, footer,
