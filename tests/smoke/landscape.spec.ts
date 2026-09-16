@@ -1,10 +1,4 @@
-import {
-  test,
-  expect,
-  devices,
-  type Browser,
-  type Page,
-} from "@playwright/test";
+import { test, expect, devices, type Browser, type Page } from "@playwright/test";
 
 // A phone held sideways must not be locked out of the site (WCAG 2.1 SC 1.3.4,
 // Orientation). The template used to mount `LandscapeModal` from the root
@@ -52,9 +46,8 @@ async function measure(browser: Browser, device: (typeof devices)[string]) {
 
     const media = await page.evaluate(() => ({
       coarse: window.matchMedia("(pointer: coarse)").matches,
-      narrowLandscape: window.matchMedia(
-        "(orientation: landscape) and (max-width: 1023px)",
-      ).matches,
+      narrowLandscape: window.matchMedia("(orientation: landscape) and (max-width: 1023px)")
+        .matches,
     }));
 
     const overlayAppeared = await page
@@ -73,31 +66,21 @@ async function measure(browser: Browser, device: (typeof devices)[string]) {
   }
 }
 
-test("a phone in landscape is not locked out by a modal overlay", async ({
-  browser,
-}) => {
+test("a phone in landscape is not locked out by a modal overlay", async ({ browser }) => {
   const m = await measure(browser, devices["iPhone 13 landscape"]);
   // Preconditions: the device really is the one the lockout targeted.
   expect({ coarse: m.coarse, narrowLandscape: m.narrowLandscape }).toEqual({
     coarse: true,
     narrowLandscape: true,
   });
-  expect(
-    m.overlayAppeared,
-    "a modal overlay appeared on a phone in landscape",
-  ).toBe(false);
-  expect(
-    m.operable,
-    "the page could not be operated on a phone in landscape",
-  ).toBe(true);
+  expect(m.overlayAppeared, "a modal overlay appeared on a phone in landscape").toBe(false);
+  expect(m.operable, "the page could not be operated on a phone in landscape").toBe(true);
 });
 
 // Control: the same page and the same assertions on a device the lockout never
 // targeted. It passes with the lockout still mounted, which is what makes the
 // landscape result above evidence rather than an untested assertion.
-test("a phone in portrait shows no modal overlay either (control)", async ({
-  browser,
-}) => {
+test("a phone in portrait shows no modal overlay either (control)", async ({ browser }) => {
   const m = await measure(browser, devices["iPhone 13"]);
   expect({ coarse: m.coarse, narrowLandscape: m.narrowLandscape }).toEqual({
     coarse: true,
