@@ -1,3 +1,10 @@
+<!-- Orientation lockout. NOT mounted by the template, and mounting it site-wide
+     is a WCAG 2.1 SC 1.3.4 (Orientation) failure: it paints an opaque,
+     undismissable overlay over any coarse-pointer device held sideways under
+     1024px, with nothing reachable behind it. It is kept as a primitive for the
+     rare route whose content genuinely cannot render in landscape, where it must
+     be paired with a way out. tests/smoke/landscape.spec.ts fails if the root
+     layout mounts it again. -->
 <script lang="ts">
   import { onMount } from "svelte";
   import { fade } from "$lib/transitions";

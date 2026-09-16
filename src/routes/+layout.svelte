@@ -6,7 +6,6 @@
   import "../app.css";
   import Seo from "$lib/components/Seo.svelte";
   import { composeTitle, DEFAULT_OG_IMAGE } from "$lib/seo";
-  import LandscapeModal from "$lib/components/LandscapeModal.svelte";
   import TransitionOverlay from "$lib/components/TransitionOverlay.svelte";
   import Nav from "$lib/components/Nav.svelte";
   import Footer from "$lib/components/Footer.svelte";
@@ -67,7 +66,6 @@
     />
   </div>
   <TransitionOverlay />
-  <LandscapeModal />
 {/if}
 {#if data.isPreviewSession}
   <PrismicPreview {repositoryName} />
