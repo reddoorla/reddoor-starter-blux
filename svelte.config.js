@@ -167,15 +167,25 @@ const config = {
           // stub's text is upstream's to change, and a copied string cannot be
           // told apart from a stale one.
           //
-          // Deliberately NOT the `script-src-attr` form used by
-          // vida-legacy-foundation. That directive is the more precise home for
-          // handler attributes, but it is CSP Level 3: Safari does not implement
-          // it, ignores it, and falls back to script-src — which would then
-          // carry no 'unsafe-hashes', so every Safari visitor keeps the exact
-          // defect this removes. The shared baseline in
-          // @reddoorla/maintenance/configs/svelte puts both in script-src for
-          // this reason, and this file overrides script-src wholesale, so it has
-          // to carry them itself.
+          // Both entries sit in script-src to match the shared baseline in
+          // @reddoorla/maintenance/configs/svelte (verified there in Chrome,
+          // 2026-08-17). This file overrides script-src wholesale, so it has to
+          // carry them itself.
+          //
+          // This comment used to say the `script-src-attr` form (vida-legacy-
+          // foundation's) was avoided because Safari ignores that directive and
+          // falls back to script-src. That was asserted without a measurement
+          // (reddoor-starter#132), and a measurement refuted it (2026-09-16, re
+          // vida-legacy-foundation#79): Playwright's WebKit 26.5 and Chromium
+          // 151 behaved identically. Handler ran / blocked, WebKit / Chromium:
+          //   vida's served policy (allowance in script-src-attr)   ran / ran
+          //   the same policy minus script-src-attr                 blocked / blocked
+          //   control, no allowance                                 blocked / blocked
+          //   control, 'unsafe-hashes' + hash in script-src         ran / ran
+          // So WebKit honours script-src-attr, and both forms work in both
+          // engines. Caveat: that is Playwright's WebKit build, not a shipping
+          // Safari.app. The form here is a consistency choice, not a Safari
+          // workaround.
           "unsafe-hashes",
           SVELTE_EVENT_REPLAY_HASH,
           // Cloudflare Turnstile contact-form widget (enable via PUBLIC_TURNSTILE_SITE_KEY).
