@@ -72,11 +72,13 @@ const config = {
     // so `pnpm build` (and Netlify CI) succeed; real sites still fail loudly
     // because `repositoryName` no longer matches the sentinel.
     prerender: {
-      // Prerendered endpoints (robots.txt, sitemap.xml) bake `url.origin` into
-      // their output at build time; without this it would be SvelteKit's
-      // "http://sveltekit-prerender" placeholder. Netlify sets URL to the
-      // site's production origin during builds. Local builds keep the
+      // Prerendered pages bake `url.origin` (canonical and og:url, via
+      // $lib/seo) into their output at build time; without this it would be
+      // SvelteKit's "http://sveltekit-prerender" placeholder. Netlify sets URL
+      // to the site's production origin during builds. Local builds keep the
       // placeholder, which only shows up in build/ output, never in dev.
+      // robots.txt and sitemap.xml are NOT prerendered: they must answer per
+      // host, so the netlify.app mirror can differ from the real domain (#140).
       ...(process.env.URL ? { origin: process.env.URL } : {}),
       handleHttpError: ({ path, status, message, referrer }) => {
         if (isPlaceholderRepo && status === 404) {

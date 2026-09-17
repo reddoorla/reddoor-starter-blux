@@ -111,7 +111,9 @@ Opt-in patterns that need an extra dependency live in [`docs/recipes/`](docs/rec
 
 ## SEO routes
 
-`robots.txt` and `sitemap.xml` are prerendered server routes (not static files) so both can emit absolute URLs on the deploy origin — Netlify's `URL` build env feeds `kit.prerender.origin` in `svelte.config.js`.
+`robots.txt` and `sitemap.xml` are server routes rendered **per request** (not static files, and not prerendered) so both emit absolute URLs on the host that actually asked.
+
+**The `*.netlify.app` mirror is never indexable.** Every Netlify site answers on the client's domain _and_ on `<site>.netlify.app` from the same build. On any `*.netlify.app` host, `netlify/edge-functions/mirror-noindex.ts` adds `X-Robots-Tag: noindex, nofollow` to every response — prerendered and frozen pages and static assets included — `robots.txt` drops its `Sitemap:` line, and `sitemap.xml` lists nothing. The client's domain is untouched. The test is "is this a netlify.app host" (`src/lib/indexability.ts`), never "is this not the client's domain", so nothing needs changing at DNS cutover. Check it on the **production** netlify.app host, not a deploy preview: Netlify adds its own `noindex` to previews, so a preview shows the header whether or not this code set it. Keep test files out of `netlify/edge-functions/` — Netlify bundles every file there as a function, and a test file fails the deploy.
 
 ### Focus trap action — `use:trapFocus`
 
@@ -173,5 +175,5 @@ src/
 └── app.css              # Global styles (Tailwind)
 customtypes/             # Prismic custom type definitions
 docs/recipes/            # Opt-in patterns needing extra dependencies
-static/                  # Static assets (favicon; robots.txt is a prerendered route)
+static/                  # Static assets (favicon; robots.txt is a server route)
 ```
