@@ -10,6 +10,10 @@
     "sourceMap": true,
     "strict": true,
     "moduleResolution": "bundler",
+    // netlify/edge-functions/ runs on Deno, which requires the extension on a
+    // relative import — and Netlify's bundler refuses the extensionless form
+    // ("Could not find file"). Type-checking only; nothing here emits.
+    "allowImportingTsExtensions": true,
     "plugins": [
       {
         "name": "typescript-svelte-plugin"
