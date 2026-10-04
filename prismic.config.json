@@ -1,0 +1,5 @@
+{
+  "repositoryName": "your-prismic-repo-name",
+  "libraries": ["./src/lib/slices"],
+  "routes": []
+}
