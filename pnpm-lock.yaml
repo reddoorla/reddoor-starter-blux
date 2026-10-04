@@ -237,7 +237,7 @@ importers:
         specifier: ^4.0.1
         version: 4.1.1(prettier@3.9.8)(svelte@5.57.1(@typescript-eslint/types@8.70.0))
       prismic:
-        specifier: ^1.21.0
+        specifier: ^1.22.0
         version: 1.22.0
       sharp:
         specifier: ^0.35.0
