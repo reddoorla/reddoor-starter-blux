@@ -3,7 +3,7 @@ import { isCmsFramedRoute, widenFrameAncestors } from "$lib/security/cms-framing
 
 export const handle: Handle = async ({ event, resolve }) => {
   const response = await resolve(event);
-  const cmsFramed = isCmsFramedRoute(event.url.pathname);
+  const cmsFramed = isCmsFramedRoute(event.route.id);
 
   response.headers.set("X-Content-Type-Options", "nosniff");
   if (cmsFramed) {
