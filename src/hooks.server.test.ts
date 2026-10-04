@@ -9,9 +9,13 @@ import {
 const POLICY =
   "default-src 'self'; frame-src 'self' https://repo.prismic.io; frame-ancestors 'self'; base-uri 'self'";
 
-async function headersFor(pathname: string, policy: string | null = POLICY) {
+async function headersFor(
+  pathname: string,
+  routeId: string | null,
+  policy: string | null = POLICY,
+) {
   const response = await handle({
-    event: { url: new URL(`https://example.com${pathname}`) } as never,
+    event: { url: new URL(`https://example.com${pathname}`), route: { id: routeId } } as never,
     resolve: async () =>
       new Response("<html></html>", {
         headers: {
@@ -25,13 +29,13 @@ async function headersFor(pathname: string, policy: string | null = POLICY) {
 
 describe("CMS framing", () => {
   it("keeps every ordinary page SAMEORIGIN with frame-ancestors 'self'", async () => {
-    const headers = await headersFor("/about");
+    const headers = await headersFor("/about", "/[[preview=preview]]/[uid]");
     expect(headers.get("X-Frame-Options")).toBe("SAMEORIGIN");
     expect(headers.get("Content-Security-Policy")).toBe(POLICY);
   });
 
   it("lets Prismic frame /slice-simulator: no X-Frame-Options, widened frame-ancestors", async () => {
-    const headers = await headersFor("/slice-simulator");
+    const headers = await headersFor("/slice-simulator", "/slice-simulator");
     expect(headers.get("X-Frame-Options")).toBeNull();
     const csp = headers.get("Content-Security-Policy") ?? "";
     expect(csp).toContain(CMS_FRAME_ANCESTORS);
@@ -40,11 +44,25 @@ describe("CMS framing", () => {
     expect(csp).toContain("base-uri 'self'");
   });
 
-  it("treats a trailing slash as the same route, and nothing else", () => {
-    expect(isCmsFramedRoute("/slice-simulator/")).toBe(true);
+  it("frames the route SvelteKit resolved, so an encoded path gets the same headers", async () => {
+    const headers = await headersFor("/slice%2Dsimulator", "/slice-simulator");
+    expect(headers.get("X-Frame-Options")).toBeNull();
+    expect(headers.get("Content-Security-Policy")).toContain(CMS_FRAME_ANCESTORS);
+  });
+
+  it("keeps a path that only looks like the simulator SAMEORIGIN when no route matched", async () => {
+    const headers = await headersFor("/slice-simulator", null);
+    expect(headers.get("X-Frame-Options")).toBe("SAMEORIGIN");
+    expect(headers.get("Content-Security-Policy")).toBe(POLICY);
+  });
+
+  it("matches the route id exactly", () => {
+    expect(isCmsFramedRoute("/slice-simulator")).toBe(true);
+    expect(isCmsFramedRoute("/slice-simulator/")).toBe(false);
     expect(isCmsFramedRoute("/slice-simulator-x")).toBe(false);
     expect(isCmsFramedRoute("/slice-simulator/x")).toBe(false);
-    expect(isCmsFramedRoute("/")).toBe(false);
+    expect(isCmsFramedRoute("/[[preview=preview]]/[uid]")).toBe(false);
+    expect(isCmsFramedRoute(null)).toBe(false);
   });
 
   it("adds frame-ancestors when the policy has none", () => {
@@ -54,7 +72,7 @@ describe("CMS framing", () => {
   });
 
   it("leaves a response without a CSP without one", async () => {
-    const headers = await headersFor("/slice-simulator", null);
+    const headers = await headersFor("/slice-simulator", "/slice-simulator", null);
     expect(headers.get("Content-Security-Policy")).toBeNull();
     expect(headers.get("X-Frame-Options")).toBeNull();
   });

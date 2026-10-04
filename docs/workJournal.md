@@ -62,3 +62,11 @@ this session.
 history — it was absent at the snapshot point and never added after — so it now
 exists, carrying the work-journal convention plus the merge trap above. Every site cloned from this track now
 starts with the convention rather than acquiring it later.
+
+## 2026-10-04 — The simulator leaves the public pages' bundle; an encoded path gets the simulator's framing (cherry-pick of reddoor-starter#168)
+
+Cherry-picked from the native starter, not merged, per this repo's CLAUDE.md. The full reasoning, including the four fixes that were measured and failed, is in reddoor-starter's journal entry of the same title. In short: the `@prismicio/svelte` barrel statically re-exports `SliceSimulator`, so Rolldown put `@prismicio/simulator/kit` in the barrel's shared chunk. The fix is a Vite plugin (`scripts/prismic-barrel.ts`) that declares that one re-export-only module side-effect-free. The framing hook now asks `event.route.id`, not the raw pathname.
+
+Blux carried more weight than the native starter, so it shed more. Each node's static-import closure, gzipped, before → after: home 57,927 → 53,705, `[uid]` 72,170 → 67,947, `/dev/blux-page` 56,304 → 52,124, `/dev/blux-pointe` 62,951 → 58,716, `/dev/a11y-fixtures` 59,999 → 55,505. Before, all five reached the simulator chunk. After, only `/slice-simulator` does. From `vite preview`, `/slice%2Dsimulator` went from `SAMEORIGIN` / `frame-ancestors 'self'` to the widened policy with no X-Frame-Options, and `/contact` stays `SAMEORIGIN`.
+
+Two conflicts were resolved by hand. `vite.config.ts` kept blux's plugin list, which has no `privacyServices`, and added `prismicBarrel()`. This journal kept blux's history. Mutations re-run here all went red: the plugin removed, the hook back on the pathname, and the simulator markers missed.

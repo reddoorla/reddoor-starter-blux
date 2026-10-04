@@ -14,8 +14,8 @@ export const CMS_FRAMED_ROUTES: ReadonlySet<string> = new Set(["/slice-simulator
 export const CMS_FRAME_ANCESTORS =
   "frame-ancestors 'self' http://localhost:* https://*.prismic.io https://prismic.io";
 
-export function isCmsFramedRoute(pathname: string): boolean {
-  return CMS_FRAMED_ROUTES.has(pathname.replace(/\/+$/, "") || "/");
+export function isCmsFramedRoute(routeId: string | null): boolean {
+  return routeId !== null && CMS_FRAMED_ROUTES.has(routeId);
 }
 
 /** Replace the policy's frame-ancestors directive, adding it if absent. */
