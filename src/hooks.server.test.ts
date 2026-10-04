@@ -1,6 +1,9 @@
+import { readdirSync } from "node:fs";
+import { join } from "node:path";
 import { describe, expect, it } from "vitest";
 import { handle } from "./hooks.server";
 import {
+  CMS_FRAMED_ROUTES,
   CMS_FRAME_ANCESTORS,
   isCmsFramedRoute,
   widenFrameAncestors,
@@ -54,6 +57,16 @@ describe("CMS framing", () => {
     const headers = await headersFor("/slice-simulator", null);
     expect(headers.get("X-Frame-Options")).toBe("SAMEORIGIN");
     expect(headers.get("Content-Security-Policy")).toBe(POLICY);
+  });
+
+  it("names only route ids that exist, so moving the page cannot silently unframe it", () => {
+    for (const id of CMS_FRAMED_ROUTES) {
+      const dir = join("src/routes", ...id.split("/").filter(Boolean));
+      expect(
+        readdirSync(dir).some((file) => file.startsWith("+page.")),
+        id,
+      ).toBe(true);
+    }
   });
 
   it("matches the route id exactly", () => {

@@ -2,8 +2,7 @@ import type { Plugin } from "vite";
 
 export const PRISMIC_SVELTE_BARREL = /[\\/]@prismicio[\\/]svelte[\\/]dist[\\/]index\.js$/;
 
-const REEXPORT =
-  /export\s+(?:type\s+)?(?:\*(?:\s+as\s+[\w$]+)?|\{[^}]*\})\s+from\s+(["'])[^"']+\1\s*;?/g;
+const REEXPORT = /export\s+(?:type\s+)?\{[^}]*[\w$][^}]*\}\s+from\s+(["'])[^"']+\1\s*;?/g;
 const COMMENT = /\/\*[\s\S]*?\*\/|\/\/[^\n]*/g;
 
 export function isReexportOnly(code: string): boolean {

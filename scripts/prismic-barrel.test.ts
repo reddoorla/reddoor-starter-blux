@@ -39,13 +39,19 @@ describe("prismicBarrel", () => {
     ).toThrow(/no longer re-exports only/);
   });
 
-  it("accepts every re-export form, comments and blank lines", () => {
+  it("accepts named re-exports, comments and blank lines", () => {
     expect(
       isReexportOnly(
-        '/* c */\nexport { default as A } from "./A.svelte";\n// c\n\nexport * from "./b.js";\nexport * as c from \'./c.js\'\nexport type { D } from "./d.js";\nexport {\n  e,\n  f,\n} from "./e.js";\n',
+        '/* c */\nexport { default as A } from "./A.svelte";\n// c\n\nexport type { D } from "./d.js";\nexport {\n  e,\n  f as g,\n} from \'./e.js\'\n',
       ),
     ).toBe(true);
+  });
+
+  it("rejects every form that can run a module for its side effects alone", () => {
     expect(isReexportOnly('import "./side-effect.js";')).toBe(false);
+    expect(isReexportOnly('export {} from "./setup.js";')).toBe(false);
+    expect(isReexportOnly('export * from "./polyfill.js";')).toBe(false);
+    expect(isReexportOnly('export * as ns from "./ns.js";')).toBe(false);
     expect(isReexportOnly("export const a = 1;")).toBe(false);
   });
 });
@@ -57,7 +63,13 @@ const SIMULATOR_MARKERS = ["slice-simulator--root", "sliceSimulatorAccessedDirec
 
 type Chunk = { file: string; imports?: string[]; isEntry?: boolean };
 
-describe.skipIf(!existsSync(manifestPath) || !existsSync(appPath))("the built client", () => {
+const built = existsSync(manifestPath) && existsSync(appPath);
+
+describe.skipIf(!built && !process.env.CI)("the built client", () => {
+  it("has a build to inspect", () => {
+    expect(built, "CI must build before the unit tests").toBe(true);
+  });
+
   const read = (path: string) => (existsSync(path) ? readFileSync(path, "utf8") : "");
   const manifest: Record<string, Chunk> = JSON.parse(read(manifestPath) || "{}");
   const simulatorNode = read(appPath).match(/"\/slice-simulator":\s*\[~?(\d+)/)?.[1];
