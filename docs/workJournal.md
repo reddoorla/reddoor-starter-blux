@@ -63,7 +63,7 @@ history — it was absent at the snapshot point and never added after — so it 
 exists, carrying the work-journal convention plus the merge trap above. Every site cloned from this track now
 starts with the convention rather than acquiring it later.
 
-## 2026-10-04 — The simulator leaves the public pages' bundle; an encoded path gets the simulator's framing (cherry-pick of reddoor-starter#168)
+## 2026-10-04 — The simulator leaves the public pages' bundle; an encoded path gets the simulator's framing (#39, cherry-pick of reddoor-starter#168)
 
 Cherry-picked from the native starter, not merged, per this repo's CLAUDE.md. The full reasoning, including the four fixes that were measured and failed, is in reddoor-starter's journal entry of the same title. In short: the `@prismicio/svelte` barrel statically re-exports `SliceSimulator`, so Rolldown put `@prismicio/simulator/kit` in the barrel's shared chunk. The fix is a Vite plugin (`scripts/prismic-barrel.ts`) that declares that one re-export-only module side-effect-free. The framing hook now asks `event.route.id`, not the raw pathname.
 
@@ -72,3 +72,4 @@ Blux carried more weight than the native starter, so it shed more. Each node's s
 Two conflicts were resolved by hand. `vite.config.ts` kept blux's plugin list, which has no `privacyServices`, and added `prismicBarrel()`. This journal kept blux's history. Mutations re-run here all went red: the plugin removed, the hook back on the pathname, and the simulator markers missed.
 
 The review follow-ups from reddoor-starter#168 came over the same way, by patch and not by merge. The first adds a test that each framed route id names a real `+page` directory, so a move into a route group cannot unframe the page silently. The second adds a smoke spec that asks the server for `/slice%2Dsimulator`; its control here is `/contact`, because blux has no `/privacy`. The third makes the build test fail rather than skip under `CI`. The fourth tightens the barrel guard so it rejects `export {} from` and `export * from`.
+The production client was run in a browser too. Under `vite preview` and headless Chromium, `/contact`, `/slice-simulator` and `/slice%2Dsimulator` each returned 200 with no console or page errors, and both simulator paths rendered the simulator root.
