@@ -28,7 +28,7 @@ native starter, which has diverged.
   fidelity gates. Only `README.md` conflicts, so nothing warns you. Adopt a
   shared improvement with `git fetch starter && git cherry-pick <sha>`, and
   never merge this repo back into the native one.
-- **`slicemachine.config.json` still holds the `your-prismic-repo-name`
+- **`prismic.config.json` still holds the `your-prismic-repo-name`
   sentinel**, deliberately — prerender tolerates it so a fresh clone's CI build
   is green before the CMS exists. `VITE_PRISMIC_ENVIRONMENT=your-prismic-repo-name`
   reaches the same sentinel from the environment and is a **local-only hatch**:
