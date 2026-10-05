@@ -1,31 +1,15 @@
 import { expect, test, type Page } from "@playwright/test";
+import { openModal } from "./open-modal";
 
-// THE MODAL WAS NEVER CENTRED AND NEVER LOCKED THE PAGE BEHIND IT.
+// THE MODAL WAS NEVER CENTRED.
 //
 // Tailwind preflight's `*{margin:0}` beats the UA's `dialog{margin:auto}`, and
 // with the UA's `inset:0` still in force that pins the dialog to the top-left
-// corner — `mx-4` restored the horizontal 16px and nothing else. And
-// `showModal()` puts the dialog in the top layer but does NOT stop the document
-// behind it scrolling, which on a phone reads as the modal having closed.
+// corner — `mx-4` restored the horizontal 16px and nothing else.
 //
-// Both are GEOMETRY, and jsdom performs no layout — Modal.test.ts can only pin
-// the mechanism (which classes are on the element). This file is the actual
-// measurement, which is why it exists at all.
+// That is GEOMETRY, and jsdom performs no layout, so Modal.test.ts cannot see
+// it. This file is the actual measurement, which is why it exists at all.
 const FIXTURES = "/dev/a11y-fixtures";
-
-/** Retrying click: a single click can land on markup that has not hydrated yet,
- *  where it does nothing at all and is never retried. Re-issued until the
- *  Svelte-state dialog actually opens. (Same pattern, and the same reason, as
- *  tests/smoke/landscape.spec.ts.) */
-async function openModal(page: Page) {
-  const trigger = page.getByRole("button", { name: "Open modal" });
-  const dialog = page.locator("dialog[open]");
-  await expect(async () => {
-    await trigger.click();
-    await expect(dialog).toBeVisible({ timeout: 1000 });
-  }).toPass({ timeout: 20000 });
-  return dialog;
-}
 
 /** The containing block a `position: fixed` element is laid out in, measured
  *  with a probe rather than inferred.
@@ -81,30 +65,4 @@ test("it keeps its side gutter instead of overflowing on a narrow screen", async
   const layoutWidth = (await fixedViewport(page)).width;
   expect(box.x, "left gutter").toBeGreaterThanOrEqual(8);
   expect(box.x + box.width, "right edge inside the viewport").toBeLessThanOrEqual(layoutWidth - 8);
-});
-
-test("the page behind the open modal does not scroll", async ({ page }) => {
-  await page.goto(FIXTURES, { waitUntil: "domcontentloaded" });
-
-  // The fixtures page is far taller than the viewport, so a wheel over it moves
-  // the document — that is the control for this measurement.
-  await page.mouse.move(200, 300);
-  await page.mouse.wheel(0, 600);
-  await expect
-    .poll(() => page.evaluate(() => window.scrollY), {
-      message: "control: the page scrolls at all before the modal is opened",
-    })
-    .toBeGreaterThan(0);
-
-  await page.evaluate(() => window.scrollTo(0, 0));
-  const dialog = await openModal(page);
-  await expect(dialog).toBeVisible();
-
-  const before = await page.evaluate(() => window.scrollY);
-  await page.mouse.move(200, 300);
-  await page.mouse.wheel(0, 600);
-  await page.waitForTimeout(300);
-  const after = await page.evaluate(() => window.scrollY);
-
-  expect(after, `document scrolled ${before} → ${after} behind the open modal`).toBe(before);
 });

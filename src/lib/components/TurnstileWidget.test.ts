@@ -137,9 +137,17 @@ describe("TurnstileWidget", () => {
     expect(mount).not.toBeNull();
     expect(api.render).not.toHaveBeenCalled();
     expect(mount.children.length).toBe(0);
-    // jsdom resolves no Tailwind, so the class token is the assertable form
-    // here; that it really reserves 65px is a browser question, not a jsdom one.
-    expect(mount.className).toContain("min-h-[65px]");
+    // jsdom resolves no Tailwind, so the reservation is read off the resting
+    // sizing classes: 4px a spacing step, or an arbitrary `[Npx]`. 65px is not a
+    // design value but the height of Cloudflare's iframe.
+    const reserved = Math.max(
+      0,
+      ...[...mount.classList].map((c) => {
+        const m = /^(?:min-h|h|size)-(?:([\d.]+)|\[([\d.]+)px\])$/.exec(c);
+        return !m ? 0 : m[1] ? Number(m[1]) * 4 : Number(m[2]);
+      }),
+    );
+    expect(reserved, "Cloudflare's widget iframe is 65px tall").toBeGreaterThanOrEqual(65);
 
     await vi.waitFor(() => expect(api.render).toHaveBeenCalledTimes(1));
   });

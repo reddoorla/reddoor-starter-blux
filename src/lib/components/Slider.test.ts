@@ -184,7 +184,10 @@ describe("Slider fade mode", () => {
 
     expect(isInert(slides[0])).toBe(false);
     expect(isInert(slides[1])).toBe(true);
-    expect(slides[1].className).toContain("opacity-0");
+    // Stacked in one cell, an inactive slide that looks like the active one covers it.
+    const hidden = /(^|\s)(opacity-0|invisible|hidden)(\s|$)/;
+    expect(slides[1].className).toMatch(hidden);
+    expect(slides[0].className).not.toMatch(hidden);
 
     await fireEvent.click(getByLabelText("Next slide"));
     expect(isInert(slides[0])).toBe(true);

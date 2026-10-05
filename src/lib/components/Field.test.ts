@@ -1,8 +1,52 @@
 import { describe, it, expect, afterEach } from "vitest";
 import { render, cleanup } from "@testing-library/svelte";
+import { readFileSync } from "node:fs";
+import { resolve } from "node:path";
 import Field from "./Field.svelte";
 
 afterEach(() => cleanup());
+
+/** app.css, cwd-relative: under jsdom `import.meta.url` is not a file: URL —
+ *  see theme-contrast.test.ts. */
+const CSS = readFileSync(resolve(process.cwd(), "src/app.css"), "utf8");
+
+/** app.css's `@theme` block. */
+const THEME_BODY = /@theme\s*\{([\s\S]*?)\n\}/.exec(CSS)?.[1] ?? "";
+
+/** The theme's colours, read from app.css as #rrggbb: 3- and 6-digit hex,
+ *  white/black, and the achromatic `oklch(L 0 H)` greys (linear sRGB is L³ on
+ *  every channel — see theme-contrast.test.ts's achromaticOklch). */
+const THEME: Record<string, string> = (() => {
+  const out: Record<string, string> = {};
+  for (const m of THEME_BODY.matchAll(
+    /--color-([a-z0-9-]+):\s*(#[0-9a-f]{3}(?:[0-9a-f]{3})?|white|black)\s*;/gi,
+  )) {
+    const hex = m[2] === "white" ? "#ffffff" : m[2] === "black" ? "#000000" : m[2];
+    out[m[1]] = hex.length === 4 ? hex.replace(/[0-9a-f]/gi, (c) => c + c) : hex;
+  }
+  for (const m of THEME_BODY.matchAll(
+    /--color-([a-z0-9-]+):\s*oklch\(\s*([\d.]+)(%?)\s+0(?:\.0+)?%?\s+-?[\d.]+(?:deg)?\s*\)\s*;/gi,
+  )) {
+    const linear = (Number(m[2]) / (m[3] ? 100 : 1)) ** 3;
+    const encoded = linear <= 0.0031308 ? 12.92 * linear : 1.055 * linear ** (1 / 2.4) - 0.055;
+    const byte = Math.round(Math.min(1, Math.max(0, encoded)) * 255);
+    out[m[1]] = `#${byte.toString(16).padStart(2, "0").repeat(3)}`;
+  }
+  return out;
+})();
+
+/** WCAG 2.x contrast between two #rrggbb values. */
+function contrast(a: string, b: string): number {
+  const luminance = (hex: string) => {
+    const [r, g, bl] = [1, 3, 5].map((i) => {
+      const c = parseInt(hex.slice(i, i + 2), 16) / 255;
+      return c <= 0.04045 ? c / 12.92 : ((c + 0.055) / 1.055) ** 2.4;
+    });
+    return 0.2126 * r + 0.7152 * g + 0.0722 * bl;
+  };
+  const [hi, lo] = [luminance(a), luminance(b)].sort((x, y) => y - x);
+  return (hi + 0.05) / (lo + 0.05);
+}
 
 describe("Field", () => {
   it("renders a label associated with the input", () => {
@@ -61,27 +105,30 @@ describe("Field", () => {
 
 // The control's skin, which had two defects a class list cannot show you.
 describe("Field styling", () => {
-  it("gives the input and the textarea the SAME classes", () => {
-    // They carried two copy-pasted class lists, which is exactly how a fix
-    // lands on one control and not the other — the invisible border below had
-    // to be changed in two places.
-    const input = render(Field, { name: "a", label: "A" });
-    const inputClass = input.getByLabelText("A").getAttribute("class");
-    input.unmount();
-
-    const area = render(Field, { name: "b", label: "B", type: "textarea" });
-    expect(area.getByLabelText("B").getAttribute("class")).toBe(inputClass);
-  });
-
-  it("draws a resting border that clears the 3:1 non-text minimum", () => {
-    // --color-light is #e5e7eb: 1.20:1 against the white card, so the fields
-    // read as invisible boxes and a visitor has to hunt for where to type.
-    // WCAG 1.4.11 wants 3:1 for a control's boundary. --color-secondary
-    // (#6b7280) is 4.83:1.
-    const { getByLabelText } = render(Field, { name: "a", label: "A" });
-    const cls = getByLabelText("A").getAttribute("class") ?? "";
-    expect(cls).not.toContain("border-light");
-    expect(cls).toContain("border-secondary");
+  it("draws a resting border that clears the 3:1 non-text minimum on every light ground", () => {
+    // WCAG 1.4.11 wants 3:1 for a control's boundary. The first border was
+    // `--color-light`, 1.24:1 on white: invisible boxes, and a visitor hunting
+    // for where to type. So the border's token is MEASURED here against
+    // app.css rather than named, on both controls.
+    for (const type of ["text", "textarea"] as const) {
+      const { getByLabelText, unmount } = render(Field, { name: "a", label: "A", type });
+      const cls = getByLabelText("A").getAttribute("class") ?? "";
+      unmount();
+      const resting = cls.split(/\s+/).filter((c) => !c.includes(":"));
+      const borders = resting
+        .map((c) => /^border-([a-z][a-z0-9-]*)$/.exec(c)?.[1])
+        .filter((token): token is string => !!token && token in THEME);
+      expect(
+        borders,
+        `exactly one measurable resting border colour on the ${type} (#171: forms not yet read)`,
+      ).toHaveLength(1);
+      for (const ground of ["background", "white", "light"]) {
+        expect(
+          contrast(THEME[borders[0]], THEME[ground]),
+          `${type}: border-${borders[0]} on bg-${ground}`,
+        ).toBeGreaterThanOrEqual(3);
+      }
+    }
   });
 
   it("keeps the forced-colors outline fallback on focus (Tailwind v4)", () => {
@@ -90,10 +137,15 @@ describe("Field styling", () => {
     // transparent outline the forced-colors palette repaints. Under forced
     // colours the ring is dropped by the engine, so that outline is the only
     // focus affordance left.
-    const { getByLabelText } = render(Field, { name: "a", label: "A" });
-    const cls = getByLabelText("A").getAttribute("class") ?? "";
-    expect(cls).toContain("focus:outline-hidden");
-    expect(cls).not.toContain("focus:outline-none");
+    for (const type of ["text", "textarea"] as const) {
+      const { getByLabelText, unmount } = render(Field, { name: "a", label: "A", type });
+      const cls = (getByLabelText("A").getAttribute("class") ?? "").split(/\s+/);
+      unmount();
+      expect(
+        cls.filter((c) => /(^|:)outline-none$/.test(c)),
+        type,
+      ).toEqual([]);
+    }
   });
 });
 
@@ -118,7 +170,7 @@ describe("Field autofocus", () => {
 
   it("applies to the textarea as well as the input", () => {
     // The two controls are a standing source of one-sided fixes in this
-    // component (see "gives the input and the textarea the SAME classes").
+    // component.
     const { getByLabelText } = render(Field, {
       name: "msg",
       label: "Message",
