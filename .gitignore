@@ -8,8 +8,13 @@ build
 .env.*
 !.env.example
 
-# Local agent config — operator-specific, must not ship with the template
-.claude/
+# Local agent config — operator-specific, must not ship with the template.
+# Two exceptions: the cloud-session hook and the settings.json that registers
+# it, which hold nothing operator- or machine-specific. Personal permissions
+# belong in .claude/settings.local.json, which stays ignored.
+.claude/*
+!.claude/settings.json
+!.claude/hooks/
 
 # OS / editor / test output
 .DS_Store

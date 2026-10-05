@@ -19,6 +19,15 @@ Commands: `pnpm lint`, `pnpm check`, `pnpm test` (`test:unit` then
 `test:smoke`). There is no `pnpm verify` here — that script belongs to the
 native starter, which has diverged.
 
+In a Claude cloud session, `.claude/hooks/cloud-session-setup.sh` (registered
+in the tracked `.claude/settings.json`) runs on startup and resume and only
+when `CLAUDE_CODE_REMOTE=true`. It puts `.nvmrc`'s Node on `PATH`, installs
+dependencies, installs the browsers the pinned Playwright names, exports
+`CHROME_PATH` for lhci and trusts the egress proxy's CA. It prints nothing
+unless something failed. Personal settings belong in
+`.claude/settings.local.json`, which stays gitignored with the rest of
+`.claude/` (cherry-picked from reddoor-starter#167).
+
 ## Two traps
 
 - **Never plain-merge the native starter.** Verified 2026-09-01: the native

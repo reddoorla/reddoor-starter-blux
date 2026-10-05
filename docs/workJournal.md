@@ -73,3 +73,23 @@ Two conflicts were resolved by hand. `vite.config.ts` kept blux's plugin list, w
 
 The review follow-ups from reddoor-starter#168 came over the same way, by patch and not by merge. The first adds a test that each framed route id names a real `+page` directory, so a move into a route group cannot unframe the page silently. The second adds a smoke spec that asks the server for `/slice%2Dsimulator`; its control here is `/contact`, because blux has no `/privacy`. The third makes the build test fail rather than skip under `CI`. The fourth tightens the barrel guard so it rejects `export {} from` and `export * from`.
 The production client was run in a browser too. Under `vite preview` and headless Chromium, `/contact`, `/slice-simulator` and `/slice%2Dsimulator` each returned 200 with no console or page errors, and both simulator paths rendered the simulator root.
+
+## 2026-10-05 — The cloud-session hook, picked from the native starter (cherry-pick of reddoor-starter#167, `9fb434b`)
+
+The native starter gained a SessionStart hook on 10-04 (reddoor-maintenance
+Operator decision 70). Without it, a Claude cloud container cannot launch
+the browser that the lockfile's Playwright names: the image's
+`/opt/pw-browsers` lags behind it. On the native side that turned the axe
+gate into `no results written`. This track's lockfile resolves the same
+`@playwright/test` range, so it would hit the same gap, and `pnpm test:smoke`
+needs that browser too. The hook is gated on `CLAUDE_CODE_REMOTE=true`, so
+CI and laptops never run it.
+
+It came across as a cherry-pick, per the rule above. Two parts of the
+native commit did not apply as they were. The native CLAUDE.md sentence it
+edits does not exist here, so this file gets its own short paragraph
+instead. The hook's failure messages named `pnpm verify` and
+`pnpm test:a11y`, which this track does not have, so they now name
+`pnpm lint`, `check`, `test` and `test:smoke`. The `.gitignore` change
+applied unchanged: `.claude/*` stays ignored except `settings.json` and
+`hooks/`.
