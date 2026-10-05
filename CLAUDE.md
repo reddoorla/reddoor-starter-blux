@@ -19,6 +19,15 @@ Commands: `pnpm lint`, `pnpm check`, `pnpm test` (`test:unit` then
 `test:smoke`). There is no `pnpm verify` here — that script belongs to the
 native starter, which has diverged.
 
+`pnpm install` also installs a pre-commit hook (`simple-git-hooks`, via
+`prepare`) that runs `prettier --write` on the staged files through
+`lint-staged`, so formatting is fixed at commit time instead of failing CI's
+first step. It formats only what is staged and leaves unstaged edits alone. A
+checkout with no `node_modules` (a fresh worktree) commits unformatted, with a
+`pre-commit:` line saying so, rather than being blocked. A file prettier cannot
+parse blocks the commit; fix the syntax error rather than reaching for
+`--no-verify` (cherry-picked from reddoor-starter#169).
+
 In a Claude cloud session, `.claude/hooks/cloud-session-setup.sh` (registered
 in the tracked `.claude/settings.json`) runs on startup and resume and only
 when `CLAUDE_CODE_REMOTE=true`. It puts `.nvmrc`'s Node on `PATH`, installs
