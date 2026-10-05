@@ -2,7 +2,6 @@ import { describe, expect, it } from "vitest";
 import {
   bandFor,
   cellWidth,
-  GRID_GUTTER,
   loadPresentation,
   rowCellBases,
   selectPresentation,
@@ -78,22 +77,20 @@ describe("presentation", () => {
     it("reserves an even share of the gutter from each cell of a 2-up row", () => {
       // 70/30 media|text (bands 6/12) — two cells share one line (k=2), so each
       // gives up half the 4% gutter (2%) and the pair still fits: 68+28+4=100.
-      expect(rowCellBases([cell({ cols: 2, ratio: 70 }), cell({ cols: 2, ratio: 30 })])).toEqual([
-        "calc(70% - 2%)",
-        "calc(30% - 2%)",
-      ]);
+      expect(rowCellBases([cell({ cols: 2, ratio: 70 }), cell({ cols: 2, ratio: 30 })], 4)).toEqual(
+        ["calc(70% - 2%)", "calc(30% - 2%)"],
+      );
       // 20/80 icon|heading (band 3) reserves the same even 2% per cell.
-      expect(rowCellBases([cell({ cols: 2, ratio: 20 }), cell({ cols: 2, ratio: 80 })])).toEqual([
-        "calc(20% - 2%)",
-        "calc(80% - 2%)",
-      ]);
+      expect(rowCellBases([cell({ cols: 2, ratio: 20 }), cell({ cols: 2, ratio: 80 })], 4)).toEqual(
+        ["calc(20% - 2%)", "calc(80% - 2%)"],
+      );
     });
 
     it("keys the reservation off cells-per-LINE (cols), not cell count", () => {
       // Band 14: 7 cells at cols=4 → 4 per line (25% each), NOT 7. Reserving
       // gutter/2 would wrap the 4th cell; the correct share is 4*(4-1)/4=3%.
       const cells = Array.from({ length: 7 }, () => cell({ cols: 4 }));
-      expect(rowCellBases(cells)).toEqual(Array.from({ length: 7 }, () => "calc(25% - 3%)"));
+      expect(rowCellBases(cells, 4)).toEqual(Array.from({ length: 7 }, () => "calc(25% - 3%)"));
     });
 
     it("leaves single-per-line rows (100% cells) untouched — no horizontal gutter", () => {
@@ -133,13 +130,9 @@ describe("presentation", () => {
       // keeps the line at 6*13.3333 + 5*4 = 99.9998% (rounding down to 3.3333%
       // would leave it at 100.0004% — marginally wide).
       const cells = Array.from({ length: 6 }, () => cell({ cols: 6 }));
-      expect(rowCellBases(cells)).toEqual(
+      expect(rowCellBases(cells, 4)).toEqual(
         Array.from({ length: 6 }, () => "calc(16.6667% - 3.3334%)"),
       );
-    });
-
-    it("exports the default gutter as a single source of truth (kept in sync with the md:gap-x class)", () => {
-      expect(GRID_GUTTER).toBe(4);
     });
   });
 

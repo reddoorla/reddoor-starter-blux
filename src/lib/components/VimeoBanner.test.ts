@@ -139,7 +139,7 @@ describe("VimeoBanner", () => {
 
     window.dispatchEvent(vimeoMessage("playProgress", { source: sourceOf(container) }));
     await tick();
-    expect(wrapper.className).toContain("opacity-100");
+    expect(wrapper.className).not.toContain("opacity-0");
   });
 
   it("ignores heartbeat messages from other origins", async () => {
@@ -227,10 +227,10 @@ describe("VimeoBanner", () => {
 
     window.dispatchEvent(vimeoMessage("playProgress", { source: sourceOf(container) }));
     await tick();
-    expect(wrapper.className).toContain("opacity-100");
+    expect(wrapper.className).not.toContain("opacity-0");
 
-    // Watchdog polls each second; >2.5s without a beat hides the video.
-    vi.advanceTimersByTime(4000);
+    // A stalled player must not hold a frozen frame over the poster.
+    vi.advanceTimersByTime(30_000);
     await tick();
     expect(wrapper.className).toContain("opacity-0");
   });

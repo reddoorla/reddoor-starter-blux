@@ -30,7 +30,8 @@ Run locally:
 
 ```bash
 pnpm test:unit        # vitest unit tests
-pnpm test:smoke       # Playwright + axe (boots vite dev)
+pnpm test:smoke       # the @smoke Playwright tier + axe (boots vite dev)
+pnpm test:e2e         # every Playwright spec, @smoke or not
 pnpm test:lhci        # Lighthouse CI (boots vite dev)
 ```
 

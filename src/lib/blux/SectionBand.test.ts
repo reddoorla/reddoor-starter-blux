@@ -2,6 +2,7 @@ import { describe, expect, it, afterEach, beforeEach, vi } from "vitest";
 import { render, cleanup } from "@testing-library/svelte";
 import { createRawSnippet } from "svelte";
 import SectionBand from "./SectionBand.svelte";
+import { animateIn } from "$lib/actions/animateIn";
 
 // jsdom has no matchMedia; Media queries prefers-reduced-motion for videos.
 beforeEach(() => {
@@ -19,6 +20,9 @@ beforeEach(() => {
 
 afterEach(() => cleanup());
 const children = () => createRawSnippet(() => ({ render: () => "<p>content</p>" }));
+/** The band and every element in it that an inline style holds at opacity 0. */
+const hiddenIn = (section: HTMLElement) =>
+  [section, ...section.querySelectorAll<HTMLElement>("*")].filter((el) => el.style.opacity === "0");
 
 describe("SectionBand", () => {
   it("applies the style record inline and renders children", () => {
@@ -99,16 +103,11 @@ describe("SectionBand", () => {
     expect(container.querySelector("video")).toBeNull();
   });
 
-  it("gates non-hero band content behind an animateIn scroll reveal (starts hidden)", () => {
-    const { container } = render(SectionBand, {
-      props: { band: { style: {} }, children: children() },
-    });
-    const reveal = container.querySelector("section > div.w-full");
-    expect(reveal).not.toBeNull();
-    // animateIn hides the wrapper until it intersects the viewport.
-    expect((reveal as HTMLElement).style.opacity).toBe("0");
-    expect((reveal as HTMLElement).style.transform).toContain("translateY");
-    expect(reveal?.textContent).toContain("content");
+  it("hiddenIn sees what animateIn hides", () => {
+    const probe = document.createElement("div");
+    const { destroy } = animateIn(probe);
+    expect(hiddenIn(probe)).toEqual([probe]);
+    destroy();
   });
 
   it("renders the hero band content immediately (no reveal gate) when eagerBackground", () => {
@@ -119,9 +118,10 @@ describe("SectionBand", () => {
         children: children(),
       },
     });
+    const section = container.querySelector("section") as HTMLElement;
     // The hero is above the fold and the LCP — it must not start hidden.
-    expect(container.querySelector("section > div.w-full")).toBeNull();
-    expect(container.querySelector("section")?.textContent).toContain("content");
+    expect(hiddenIn(section)).toHaveLength(0);
+    expect(section.textContent).toContain("content");
   });
 
   it("does not hide content under prefers-reduced-motion", () => {
@@ -138,8 +138,9 @@ describe("SectionBand", () => {
     const { container } = render(SectionBand, {
       props: { band: { style: {} }, children: children() },
     });
-    const reveal = container.querySelector("section > div.w-full");
+    const section = container.querySelector("section") as HTMLElement;
     // Wrapper still renders, but animateIn early-returns → no opacity gate.
-    expect((reveal as HTMLElement)?.style.opacity).not.toBe("0");
+    expect(hiddenIn(section)).toHaveLength(0);
+    expect(section.textContent).toContain("content");
   });
 });

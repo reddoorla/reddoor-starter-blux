@@ -2,6 +2,7 @@ import { render, cleanup } from "@testing-library/svelte";
 import { describe, it, expect, afterEach } from "vitest";
 import BluxCell from "./BluxCell.svelte";
 import type { BluxCellData } from "./cell";
+import { gridCellBasis } from "./layout";
 
 afterEach(() => cleanup());
 const rt = (level: string, text: string) => [{ type: level, text, spans: [] }];
@@ -20,11 +21,10 @@ describe("BluxCell visual fields", () => {
       content_padding: "100px 4% 80px",
       valign: "on",
     } as unknown as BluxCellData;
-    const { container } = render(BluxCell, {
-      props: { cell, basis: "calc(30% - 2%)" },
-    });
+    const basis = gridCellBasis("30%", 2);
+    const { container } = render(BluxCell, { props: { cell, basis } });
     const el = container.querySelector(".blux-cell") as HTMLElement;
-    expect(el.style.getPropertyValue("--cell-basis")).toBe("calc(30% - 2%)");
+    expect(el.style.getPropertyValue("--cell-basis")).toBe(basis);
     expect(el.getAttribute("style")).toContain("background-color: rgb(255, 255, 255)");
     expect(el.getAttribute("style")).toContain("padding: 100px 4% 80px");
     expect(el.getAttribute("data-valign")).toBe("on");
@@ -64,7 +64,7 @@ describe("BluxCell visual fields", () => {
     const { container } = render(BluxCell, { props: { cell, basis: "100%" } });
     const subCells = container.querySelectorAll<HTMLElement>(".blux-subgrid > .blux-cell");
     expect(subCells).toHaveLength(2);
-    expect(subCells[0].style.getPropertyValue("--cell-basis")).toBe("calc(50% - 2%)");
+    expect(subCells[0].style.getPropertyValue("--cell-basis")).toBe(gridCellBasis(undefined, 2));
   });
 });
 

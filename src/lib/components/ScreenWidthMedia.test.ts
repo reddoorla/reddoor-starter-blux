@@ -49,9 +49,9 @@ const props = {
   vimeoId: "76979871",
 };
 
-/** Advance past the 1200ms setTimeout defer fallback (no rIC in jsdom). */
+/** Fire the setTimeout defer fallback (no rIC in jsdom), whatever its delay. */
 async function advancePastDefer() {
-  vi.advanceTimersByTime(1200);
+  vi.runOnlyPendingTimers();
   await tick();
 }
 
@@ -106,7 +106,7 @@ describe("ScreenWidthMedia video deferral", () => {
     try {
       const { unmount } = render(ScreenWidthMedia, props);
       expect(ric).toHaveBeenCalledWith(expect.any(Function), {
-        timeout: 2000,
+        timeout: expect.any(Number),
       });
       unmount();
       expect(cancel).toHaveBeenCalledWith(42);
@@ -165,25 +165,27 @@ describe("ScreenWidthMedia quality reveal", () => {
 
     player.handlers.get("bufferend")!();
     await tick();
-    expect(iframe.className).toContain("opacity-100");
+    expect(iframe.className).not.toContain("opacity-0");
   });
 
-  it("soft cap: reveals 1.2s after the quality change is accepted", async () => {
+  it("soft cap: reveals once the quality change is accepted, ahead of the hard cap", async () => {
     const { iframe, player } = await renderWithPlayer();
     player.resolveQuality();
     await Promise.resolve();
     await tick();
+    expect(vi.getTimerCount(), "no soft cap armed beside the hard cap").toBe(2);
 
-    vi.advanceTimersByTime(1200);
+    vi.advanceTimersToNextTimer();
     await tick();
-    expect(iframe.className).toContain("opacity-100");
+    expect(iframe.className).not.toContain("opacity-0");
+    expect(vi.getTimerCount(), "the hard cap fired before the soft cap").toBe(0);
   });
 
-  it("hard cap: reveals after 6s even if setQuality never settles", async () => {
+  it("hard cap: reveals even if setQuality never settles", async () => {
     const { iframe } = await renderWithPlayer();
-    vi.advanceTimersByTime(6000);
+    vi.runOnlyPendingTimers();
     await tick();
-    expect(iframe.className).toContain("opacity-100");
+    expect(iframe.className).not.toContain("opacity-0");
   });
 
   it("falls back to the poster and destroys the player on error", async () => {

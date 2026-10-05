@@ -1,10 +1,16 @@
 import { describe, it, expect, vi, afterEach } from "vitest";
-import { render, cleanup } from "@testing-library/svelte";
+import { render, cleanup, act } from "@testing-library/svelte";
 
-// `use:enhance` needs no behaviour here — these cases are about what the page
-// renders and where focus lands, not about submission.
+type Settle = (opts: { update: () => Promise<void> }) => Promise<void>;
+
+// `use:enhance`'s submit callback is captured so a case can drive the page
+// through its sending state without a network.
+const enhanced = vi.hoisted(() => ({ submit: undefined as undefined | (() => Settle) }));
 vi.mock("$app/forms", () => ({
-  enhance: () => ({ destroy() {} }),
+  enhance: (_form: HTMLFormElement, submit: () => Settle) => {
+    enhanced.submit = submit;
+    return { destroy() {} };
+  },
 }));
 // No sitekey → TurnstileWidget renders nothing, as in dev and in CI.
 vi.mock("$env/dynamic/public", () => ({ env: {} }));
@@ -16,23 +22,26 @@ const props = (form: unknown = null) => ({ data: { formTs: 1_700_000_000_000 }, 
 afterEach(() => cleanup());
 
 describe("the contact page's submit button", () => {
-  // `disabled:opacity-60` composited the label against the faded button at the
-  // exact moment someone is waiting on it and deciding whether to click again —
-  // the least readable state on the page, during the only wait it has.
-  it("stays at full strength while sending", () => {
-    const { container } = render(ContactPage, props());
-    const button = container.querySelector('button[type="submit"]') as HTMLButtonElement;
-    expect(button).not.toBeNull();
-    expect(button.className).not.toContain("disabled:opacity-60");
-  });
-
-  it("signals the wait with a cursor and aria-busy, not by dimming", () => {
+  it("is busy and disabled while sending, and comes back when it settles", async () => {
     // aria-busy so the state change reaches a screen reader instead of only
-    // the accessible name silently mutating to "Sending…".
+    // the accessible name silently mutating to "Sending…"; disabled so a
+    // second click cannot send the message twice.
     const { container } = render(ContactPage, props());
     const button = container.querySelector('button[type="submit"]') as HTMLButtonElement;
-    expect(button.className).toContain("disabled:cursor-wait");
     expect(button.getAttribute("aria-busy")).toBe("false");
+    expect(button.disabled).toBe(false);
+
+    let settle!: Settle;
+    await act(() => {
+      settle = enhanced.submit!();
+    });
+    expect(button.getAttribute("aria-busy")).toBe("true");
+    expect(button.disabled).toBe(true);
+
+    // An error response keeps the form mounted; the button must not stay dead.
+    await act(() => settle({ update: async () => {} }));
+    expect(button.getAttribute("aria-busy")).toBe("false");
+    expect(button.disabled).toBe(false);
   });
 });
 

@@ -1,6 +1,7 @@
 import { render, cleanup } from "@testing-library/svelte";
 import { describe, it, expect, afterEach } from "vitest";
 import type { Content } from "@prismicio/client";
+import { gridCellBasis } from "$lib/blux-catalog/layout";
 import BluxSection from "./index.svelte";
 
 afterEach(() => cleanup());
@@ -101,7 +102,7 @@ describe("BluxSection slice", () => {
     expect(link.closest("a")?.getAttribute("href")).toBe("https://ex.com");
   });
 
-  it("gives each cell a --cell-basis reserving the 4% gutter for the cell count", () => {
+  it("gives each cell a --cell-basis reserving the gutter for the cell count", () => {
     const twoCol = {
       slice_type: "blux_section",
       variation: "default",
@@ -124,8 +125,8 @@ describe("BluxSection slice", () => {
     expect(cellsEl.getAttribute("style")).toContain("max-width: 1100px");
     expect(cellsEl.getAttribute("style")).toContain("--band-pad: 80px 4%");
     const cells = container.querySelectorAll<HTMLElement>(".blux-section__cells > .blux-cell");
-    expect(cells[0].style.getPropertyValue("--cell-basis")).toBe("calc(50% - 2%)");
-    expect(cells[1].style.getPropertyValue("--cell-basis")).toBe("calc(70% - 2%)");
+    expect(cells[0].style.getPropertyValue("--cell-basis")).toBe(gridCellBasis(undefined, 2));
+    expect(cells[1].style.getPropertyValue("--cell-basis")).toBe(gridCellBasis("70%", 2));
   });
 
   it("wraps the heading in its type-role container when heading_role is set", () => {

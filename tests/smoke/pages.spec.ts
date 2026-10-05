@@ -35,31 +35,37 @@ function attachConsoleWatcher(page: Page, extraAllowed: RegExp[] = []) {
 }
 
 for (const route of smokeRoutes) {
-  test(`${route.path} (${route.name}) loads with no console errors`, async ({ page }) => {
-    const expectedStatus = route.expectStatus ?? 200;
-    // A route whose expected status IS an error (e.g. "/" on the placeholder
-    // starter, see tests/smoke/routes.ts) makes the browser log "Failed to
-    // load resource: ... <status>" for the document itself — expected, not a
-    // bug. Same allowance as the dedicated 404-page test below.
-    const errors = attachConsoleWatcher(
-      page,
-      expectedStatus >= 400 ? [new RegExp(`Failed to load resource.*${expectedStatus}`, "i")] : [],
-    );
-    const response = await page.goto(route.path, {
-      waitUntil: "domcontentloaded",
-    });
-    expect(response?.status(), `HTTP status for ${route.path}`).toBe(expectedStatus);
-    if (route.hydrationMarker) {
-      await expect(
-        page.locator(route.hydrationMarker),
-        `hydration marker "${route.hydrationMarker}" on ${route.path}`,
-      ).toBeVisible();
-    }
-    expect(errors, `console errors on ${route.path}`).toEqual([]);
-  });
+  test(
+    `${route.path} (${route.name}) loads with no console errors`,
+    { tag: "@smoke" },
+    async ({ page }) => {
+      const expectedStatus = route.expectStatus ?? 200;
+      // A route whose expected status IS an error (e.g. "/" on the placeholder
+      // starter, see tests/smoke/routes.ts) makes the browser log "Failed to
+      // load resource: ... <status>" for the document itself — expected, not a
+      // bug. Same allowance as the dedicated 404-page test below.
+      const errors = attachConsoleWatcher(
+        page,
+        expectedStatus >= 400
+          ? [new RegExp(`Failed to load resource.*${expectedStatus}`, "i")]
+          : [],
+      );
+      const response = await page.goto(route.path, {
+        waitUntil: "domcontentloaded",
+      });
+      expect(response?.status(), `HTTP status for ${route.path}`).toBe(expectedStatus);
+      if (route.hydrationMarker) {
+        await expect(
+          page.locator(route.hydrationMarker).filter({ visible: true }).first(),
+          `hydration marker "${route.hydrationMarker}" on ${route.path}`,
+        ).toBeVisible();
+      }
+      expect(errors, `console errors on ${route.path}`).toEqual([]);
+    },
+  );
 }
 
-test("404 page renders the custom error component", async ({ page }) => {
+test("404 page renders the custom error component", { tag: "@smoke" }, async ({ page }) => {
   // The browser logs a top-level "Failed to load resource: 404" for the page
   // itself — expected on a 404 route, not a bug. Allow it here.
   const errors = attachConsoleWatcher(page, [/Failed to load resource.*404/i]);
@@ -67,7 +73,12 @@ test("404 page renders the custom error component", async ({ page }) => {
     waitUntil: "domcontentloaded",
   });
   expect(response?.status()).toBe(404);
-  // src/routes/+error.svelte renders `<h1>{page.status}</h1>` → "404".
-  await expect(page.getByText("404", { exact: false }).first()).toBeVisible();
+  // src/routes/+error.svelte renders `<h1>{page.status}</h1>` → "404", which
+  // reddoor-maintenance's launch gate reads off the served HTML to tell this
+  // site's own 404 from a parked domain's (SITE_404_MARKER, src/recipes/launch.ts).
+  expect(await response!.text()).toMatch(/<h1[^>]*>\s*404\s*<\/h1>/i);
+  // SvelteKit's default error page prints the same <h1>. Only the custom
+  // component emits a noindex robots meta on this path.
+  await expect(page.locator('meta[name="robots"][content*="noindex"]')).toBeAttached();
   expect(errors).toEqual([]);
 });

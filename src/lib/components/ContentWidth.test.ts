@@ -39,16 +39,14 @@ const body = () =>
   }));
 
 describe("ContentWidth", () => {
-  it("applies animateIn hidden styles when animateInOnScroll is true", () => {
+  it("hands the content to the scroll reveal when animateInOnScroll is true", () => {
     const { getByText } = render(ContentWidth, {
       animateInOnScroll: true,
       children: body(),
     });
 
     const inner = getByText("Inner content").parentElement as HTMLElement;
-    expect(inner.style.opacity).toBe("0");
-    expect(inner.style.transform).toBe("translateY(50%)");
-    expect(inner.style.transition).toContain("opacity");
+    expect(inner.hasAttribute("data-reveal")).toBe(true);
   });
 
   it("does not apply animateIn styles when animateInOnScroll is false", () => {
