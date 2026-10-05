@@ -60,17 +60,12 @@ describe("enhanceFrozenHtml + css", () => {
     expect(out).toContain('href="mailto:Todd.Doney@cbre.com"');
   });
 
-  it("ships the reveal + anchor css", () => {
-    expect(FROZEN_ENHANCE_CSS).toContain(".rd-fx-wait");
-    expect(FROZEN_ENHANCE_CSS).toContain(".rd-fx-run");
+  it("motion-gates smooth scrolling and clears the fixed nav on anchor jumps", () => {
     expect(FROZEN_ENHANCE_CSS).toContain("scroll-margin-top");
-    expect(FROZEN_ENHANCE_CSS).toContain("prefers-reduced-motion");
-  });
-
-  it("re-centers the map plus/minus glyph relatively (both states)", () => {
-    expect(FROZEN_ENHANCE_CSS).toContain(".map_icon_plusm:before{top:calc(50% - 7px)");
-    expect(FROZEN_ENHANCE_CSS).toContain(
-      '.map_icon[data-clicked="1"] .map_icon_plusm:before{top:50%;height:0}',
+    const ungated = FROZEN_ENHANCE_CSS.replace(
+      /@media\s*\(prefers-reduced-motion:\s*no-preference\)\s*\{(?:[^{}]*\{[^}]*\})*[^{}]*\}/g,
+      "",
     );
+    expect(ungated).not.toMatch(/scroll-behavior:\s*smooth/);
   });
 });

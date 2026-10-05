@@ -93,3 +93,39 @@ instead. The hook's failure messages named `pnpm verify` and
 `pnpm lint`, `check`, `test` and `test:smoke`. The `.gitignore` change
 applied unchanged: `.claude/*` stays ignored except `settings.json` and
 `hooks/`.
+
+## 2026-10-05 — Tests build; they don't freeze: the hook and the tiers, picked from the native starter, and the fidelity gates split by what a red means (cherry-picks of reddoor-starter#169 and #180)
+
+This PR brings over the native starter's pre-commit prettier hook (#169) and its three test tiers (#180). Both were cherry-picked, not merged, per the trap above. The reason is the same one roalson-interests#256 gave: a test that an agent built against a comp turns into a fence around a design decision once a human takes the site over. Blux needed it more than the native track, because every Blux site inherits the-pointe fidelity specs, and those sat inside the required check with a page-height band (15000–15700px at 1440), computed flex-basis, padding, font-size and an exact nav list.
+
+The cherry-pick of #169 broke the lockfile, leaving a duplicate `tinyexec` key. pnpm then re-resolved and upgraded unrelated dependencies, so I threw that version away. The lockfile in this PR is blux's own, plus `pnpm add -D lint-staged simple-git-hooks`, which is the minimal diff. The cherry-pick of #180 conflicted in six places:
+
+- It deleted COMPONENTS.md, STARTER.md and theme-contrast.test.ts, and those deletions were kept, because this track never had them.
+- CLAUDE.md, this journal, accessibility.md, CtaBanner.test.ts and slice-simulator.spec.ts kept blux's version and were then edited by hand.
+
+That conflict had a casualty that only surfaced in review. The `@smoke` tags on `slice-simulator.spec.ts` were in the dropped hunk (native tests `/privacy`, blux tests `/contact`). So under `--grep @smoke` the X-Frame-Options and frame-ancestors contract ran in no gate tier at all. The tags are now back on all four tests.
+
+The fidelity gates were split by what each assertion would tell a client:
+
+- **`@smoke` (gate).** A new frozen-render contract test checks four things: no `⟦` slot token survives, there are no page errors, `nav` and `footer` are present, and the nav contains "Vision" and "Contact Us" (containment, not the list). The pointe catalog test is tagged as is. It checks the fixture data, the map markup and that there are no errors, and its footer is now found by the `contentinfo` role, not a bare tag.
+- **Scaffold.** The height band and the computed-style visual layer stay untagged. Two comments in them said "never weaken the assertion"; they are gone, because in the scaffold tier a human's design change is allowed to make them stale.
+
+Playwright went from 8 `@smoke` tests of 20 to 14 of 21. In a local browser run, all 14 passed (51.8s, on an isolated `REDDOOR_SMOKE_PORT` so that the reddoor-website run in the same container could not lend this run its dev server). I added the native skip-link and `main#main-content` assertions to `tests/a11y/fixtures.spec.ts` (WCAG 2.4.1); #180 carried them, but blux never picked up the commit that introduced them. Breaking the layout's `href="#main-content"` turned all three fixture tests red, and they went green again once it was restored.
+
+Unit side: 679 passed, 3 skipped (685 before). Changes by file:
+
+- **Grid, SplitFeature, presentation, layout and the catalog cells.** These pinned the 4% column gutter four ways: a `GRID_GUTTER` literal, the `md:gap-x-[4%]` class string, and `calc(N% - 2%)` reserves. Those are replaced by coupled checks:
+  - The rendered row's gap-x percentage equals the imported `GRID_GUTTER`.
+  - Each cell's reserve ×2 equals the row's gap.
+  - k cells plus the gutters fit in 100%.
+
+  Review caught that my first rewrite still restated `rowCellBases`' formula without its ceil-to-4-decimals rounding, so 55 consistent gutters between 1.0 and 10.0 went red, 4.2 among them. The wrapping-grid case now checks the property instead.
+
+- **The overlay caption guard.** It had become conditional on `opacity-0`. A slide-up reveal with no touch or focus variant passed silently. That is exactly the regression the test exists for: captions stranded on phones and for keyboard users. It now maps each class that hides the panel at rest to the classes that undo it, and requires an undo under hover, `hover:none` and `focus-within`.
+- **Three `never leaks _valign/_fill/_overlay as CSS` assertions could never fail.** jsdom drops the invalid declaration, and so does a browser, so a client could never see the leak. They are deleted, not rewritten.
+- **CtaBanner.** The test now computes contrast from the theme in Tailwind's cascade order: theme.css, then blux-theme.css, then app.css. Its `toHex()` reads oklch too. The native copy has the same gap: reddoor-starter#183.
+- **artifacts.test.ts was vacuous.** Its guard compared the package name with `sveltekit-prismic-starter-t-lemos`. The 08-31 track split renamed the package to `sveltekit-prismic-starter-blux`, so the guard had passed with zero assertions ever since. It is now `it.runIf(...)` on the real name, so a scaffolded site reports it as skipped rather than as passed. beachfront-dentistry carries the same stale guard.
+
+Found and not fixed: LocationMap's default inactive tab is white on rgb(145,159,173), 2.70:1, below AA (#41). The fallback is the-pointe's transcribed design value, so a replacement is a design call.
+
+CLAUDE.md said "there is no `pnpm verify` here". That was wrong before this session began: `verify` predates the hook and runs lint, check, build and test, without the native axe step. Its nightly row named a "frozen carousel timing" spec, which does not exist. Both are corrected.

@@ -25,17 +25,12 @@ const slice = {
 } as never;
 
 describe("Gallery slice", () => {
-  it("renders the first frame full-bleed at 80vh (slider default view)", () => {
+  it("renders the first manifest frame", () => {
     const { container } = render(Gallery, {
       props: { slice, context: { presentation } },
     });
-    // One frame shown, like the original's single-frame slider.
-    const cells = container.querySelectorAll("[data-gallery-cell]");
-    expect(cells).toHaveLength(1);
     const img = container.querySelector("img");
     expect(img?.getAttribute("src")).toBe("https://cdn/one.jpg");
-    expect(img?.className).toContain("h-[80vh]");
-    expect(img?.className).toContain("object-cover");
   });
 
   it("renders nothing without a manifest gallery payload", () => {
@@ -45,7 +40,7 @@ describe("Gallery slice", () => {
     expect(container.querySelector("section")).toBeNull();
   });
 
-  it("renders a captioned grid when any frame carries a caption", () => {
+  it("renders every frame with its caption when any frame carries one", () => {
     const captioned: Presentation = {
       bands: {
         "1": {
@@ -56,16 +51,12 @@ describe("Gallery slice", () => {
         },
       },
     };
-    const { container } = render(Gallery, {
+    const { container, getByText } = render(Gallery, {
       props: { slice, context: { presentation: captioned } },
     });
-    // Captioned grid, not a full-bleed frame — and never a slider (source
-    // slider bands are `carousel` slices in the starter).
-    expect(container.querySelector('[role="region"]')).toBeNull();
-    expect(container.querySelector("[data-gallery-cell]")).toBeNull();
-    expect(container.querySelectorAll("img")).toHaveLength(2);
-    const captions = container.querySelectorAll("p.txt-role-text5");
-    expect(captions).toHaveLength(2);
-    expect(captions[0]?.textContent).toBe("one");
+    const srcs = [...container.querySelectorAll("img")].map((img) => img.getAttribute("src"));
+    expect(srcs).toEqual(expect.arrayContaining(["https://cdn/one.jpg", "https://cdn/two.jpg"]));
+    expect(getByText("one")).toBeTruthy();
+    expect(getByText("two")).toBeTruthy();
   });
 });

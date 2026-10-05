@@ -48,6 +48,9 @@ function makeStubMaps() {
   return { ns, layers, created };
 }
 
+const toggleChips = (buttons: HTMLElement[]) =>
+  buttons.filter((b) => b.hasAttribute("aria-pressed"));
+
 function deferred<T>() {
   let resolve!: (v: T) => void;
   const promise = new Promise<T>((r) => {
@@ -97,28 +100,12 @@ describe("LocationMap", () => {
     const { getAllByRole, getByRole } = render(LocationMap, {
       props: { map: config },
     });
-    const chips = getAllByRole("button");
-    expect(chips).toHaveLength(3);
+    expect(toggleChips(getAllByRole("button"))).toHaveLength(config.toggles.length);
     // The plus/minus state glyph is aria-hidden: the accessible name is the
     // bare label, so `name:`-based queries keep working.
     for (const label of ["All", "Dining", "Parks"]) {
       expect(getByRole("button", { name: label })).toBeDefined();
     }
-    // Full-width equal tabs (the original's 25%-per-tab bar): every tab flexes
-    // to an equal share of the row instead of hugging its label.
-    for (const c of chips) expect(c.className).toContain("flex-1");
-  });
-
-  it("active tab shows a minus glyph, inactive tabs a plus", async () => {
-    const { getAllByRole } = render(LocationMap, { props: { map: config } });
-    const glyphs = () =>
-      getAllByRole("button").map((c) => c.querySelector("[aria-hidden]")?.textContent?.trim());
-    expect(glyphs()).toEqual(["−", "+", "+"]);
-    const chips = getAllByRole("button");
-    const second = chips[1];
-    if (!second) throw new Error("missing chip");
-    await fireEvent.click(second);
-    expect(glyphs()).toEqual(["+", "−", "+"]);
   });
 
   it("selecting a tab notifies the owner via onselect (no prop mutation)", async () => {
@@ -126,7 +113,7 @@ describe("LocationMap", () => {
     const { getAllByRole } = render(LocationMap, {
       props: { map: config, onselect: (i: number) => seen.push(i) },
     });
-    const chips = getAllByRole("button");
+    const chips = toggleChips(getAllByRole("button"));
     const third = chips[2];
     if (!third) throw new Error("missing chip");
     await fireEvent.click(third);
@@ -138,7 +125,7 @@ describe("LocationMap", () => {
 
   it("chips are radio-style: first pressed by default, click moves the press", async () => {
     const { getAllByRole } = render(LocationMap, { props: { map: config } });
-    const chips = getAllByRole("button");
+    const chips = toggleChips(getAllByRole("button"));
     expect(chips.map((c) => c.getAttribute("aria-pressed"))).toEqual(["true", "false", "false"]);
     const second = chips[1];
     expect(second).toBeDefined();

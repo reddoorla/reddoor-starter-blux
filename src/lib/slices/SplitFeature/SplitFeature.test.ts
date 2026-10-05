@@ -37,20 +37,23 @@ describe("SplitFeature slice", () => {
     expect(cells[1]?.querySelector("img")?.getAttribute("src")).toBe("https://cdn/split.jpg");
     expect((cells[0] as HTMLElement).style.getPropertyValue("--cell-basis")).toBe("60%");
     expect((cells[1] as HTMLElement).style.getPropertyValue("--cell-basis")).toBe("40%");
-    // Cells stack full-width on mobile; from md: up the ratio basis applies,
-    // shrunk by half the column gutter so the two cells + gutter fit one line
-    // instead of wrapping (Blux's ~4% column gutter, reserved here in the basis).
-    expect((cells[1] as HTMLElement).className).toContain("basis-full");
-    expect((cells[1] as HTMLElement).className).toContain(
-      "md:basis-[calc(var(--cell-basis)_-_2%)]",
-    );
-    // The row carries the horizontal gutter between the two columns (md: up),
-    // and keeps the vertical gap for the stacked mobile layout.
-    const row = cells[0]?.parentElement as HTMLElement;
-    expect(row.className).toContain("md:gap-x-[4%]");
-    expect(row.className).toContain("gap-y-8");
     // Media on the right → no direction flip.
+    const row = cells[0]?.parentElement as HTMLElement;
     expect(row.className).not.toContain("flex-row-reverse");
+  });
+
+  it("reserves half the row's column gutter out of each cell's basis, so both columns fit one line", () => {
+    const { container } = render(SplitFeature, {
+      props: { slice, context: { presentation } },
+    });
+    const cells = container.querySelectorAll("[data-split-cell]");
+    const row = cells[0]?.parentElement as HTMLElement;
+    const gap = /gap-x-\[(\d+(?:\.\d+)?)%\]/.exec(row.className);
+    expect(gap).not.toBeNull();
+    for (const c of cells) {
+      const reserve = /--cell-basis\)_-_(\d+(?:\.\d+)?)%/.exec(c.className);
+      expect(Number(reserve?.[1]) * 2).toBe(Number(gap?.[1]));
+    }
   });
 
   it("flips visual order with flex-row-reverse when media belongs left, keeping text-first DOM order", () => {
@@ -84,7 +87,7 @@ describe("SplitFeature slice", () => {
     expect(container.querySelector("[data-split-cell]")).toBeNull();
   });
 
-  it("reserves the source frame height: media.minHeight → a cover frame, stretch, no insets", () => {
+  it("reserves the source frame height: media.minHeight → a min-height frame, intrinsic size stripped", () => {
     // The source's split media can be a bg-cover block that pins its own box
     // (the-tower band 5's 90vh panel) — a natural-height img would collapse
     // the band by hundreds of px. Same cover-frame idiom as CarouselFrames.
@@ -113,38 +116,22 @@ describe("SplitFeature slice", () => {
     const { container } = render(SplitFeature, {
       props: { slice, context: { presentation: framed } },
     });
-    const cells = container.querySelectorAll("[data-split-cell]");
-    const textCell = cells[0] as HTMLElement;
-    const mediaCell = cells[1] as HTMLElement;
-    const frame = mediaCell.querySelector("div.relative") as HTMLElement;
+    const mediaCell = container.querySelectorAll("[data-split-cell]")[1] as HTMLElement;
+    const frame = mediaCell.querySelector('[style*="min-height"]') as HTMLElement;
     expect(frame.getAttribute("style")).toContain("min-height: 90vh");
     const img = frame.querySelector("img") as HTMLElement;
-    expect(img.className).toContain("object-cover");
-    expect(img.className).toContain("absolute");
+    expect(img.getAttribute("src")).toBe("https://cdn/split.jpg");
     // No inline width/aspect fighting the cover fill.
     expect(img.getAttribute("style") ?? "").not.toContain("width: 779px");
     expect(img.getAttribute("style") ?? "").not.toContain("aspect-ratio");
-    // The reserved frame IS the design: decorative top insets stay off BOTH
-    // cells, and the row stretches columns to the frame instead of centering
-    // (the text side's painted `_fill` panel must cover its full column).
-    expect(mediaCell.className).not.toContain("md:pt-[100px]");
-    expect(textCell.className).not.toContain("md:pt-20");
-    const row = mediaCell.parentElement as HTMLElement;
-    expect(row.className).toContain("md:items-stretch");
-    expect(row.className).not.toContain("items-center");
   });
 
-  it("keeps the natural-height img, insets, and centering when the source has no frame height", () => {
+  it("renders the natural img with no frame when the source has no frame height", () => {
     const { container } = render(SplitFeature, {
       props: { slice, context: { presentation } },
     });
-    const cells = container.querySelectorAll("[data-split-cell]");
-    const textCell = cells[0] as HTMLElement;
-    const mediaCell = cells[1] as HTMLElement;
-    expect(mediaCell.className).toContain("md:pt-[100px]");
-    expect(textCell.className).toContain("md:pt-20");
-    expect(mediaCell.querySelector("div.relative")).toBeNull();
-    expect(mediaCell.querySelector("img")?.className).toContain("w-full");
-    expect((mediaCell.parentElement as HTMLElement).className).toContain("items-center");
+    const mediaCell = container.querySelectorAll("[data-split-cell]")[1] as HTMLElement;
+    expect(mediaCell.querySelector('[style*="min-height"]')).toBeNull();
+    expect(mediaCell.querySelector("img")?.getAttribute("src")).toBe("https://cdn/split.jpg");
   });
 });

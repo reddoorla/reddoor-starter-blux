@@ -16,11 +16,12 @@ describe("frozenArtifacts", () => {
   // Scaffolding renames package.json, so the template name identifies the
   // starter itself: an artifact committed HERE would flip isFrozenSite for
   // every site scaffolded afterwards.
-  it("the starter template ships no artifacts (Blux-only scoping gate)", () => {
-    if (pkg.name === "sveltekit-prismic-starter-t-lemos") {
+  it.runIf(pkg.name === "sveltekit-prismic-starter-blux")(
+    "the starter template ships no artifacts (Blux-only scoping gate)",
+    () => {
       expect(Object.keys(frozenArtifacts)).toHaveLength(0);
-    }
-  });
+    },
+  );
 
   it("keys only lowercase uids — Prismic rejects uppercase on migrate", () => {
     for (const uid of Object.keys(frozenArtifacts)) {

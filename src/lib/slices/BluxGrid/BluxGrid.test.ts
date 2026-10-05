@@ -1,6 +1,7 @@
 import { render, cleanup } from "@testing-library/svelte";
 import { describe, it, expect, afterEach } from "vitest";
 import type { Content } from "@prismicio/client";
+import { gridCellBasis } from "$lib/blux-catalog/layout";
 import BluxGrid from "./index.svelte";
 
 const rt = (level: string, text: string) => [{ type: level, text, spans: [] }];
@@ -29,7 +30,7 @@ describe("BluxGrid slice", () => {
     expect(getAllByRole("heading", { level: 3 })).toHaveLength(3);
   });
 
-  it("gives each cell a --cell-basis reserving the 4% gutter for the column count", () => {
+  it("gives each cell a --cell-basis reserving the gutter for the column count", () => {
     const twoCol = {
       slice_type: "blux_grid",
       variation: "default",
@@ -54,8 +55,8 @@ describe("BluxGrid slice", () => {
     expect(cellsEl.getAttribute("style")).toContain("max-width: 1100px");
     expect(cellsEl.getAttribute("style")).toContain("--band-pad: 80px 4%");
     const cells = container.querySelectorAll<HTMLElement>(".blux-grid__cells > .blux-cell");
-    expect(cells[0].style.getPropertyValue("--cell-basis")).toBe("calc(50% - 2%)");
-    expect(cells[1].style.getPropertyValue("--cell-basis")).toBe("calc(70% - 2%)");
+    expect(cells[0].style.getPropertyValue("--cell-basis")).toBe(gridCellBasis(undefined, 2));
+    expect(cells[1].style.getPropertyValue("--cell-basis")).toBe(gridCellBasis("70%", 2));
   });
 
   it("wraps the heading in its type-role container when heading_role is set", () => {

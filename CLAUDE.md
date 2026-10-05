@@ -16,8 +16,9 @@ fidelity gates under `src/routes/dev/`). It is the render target of
 `src/lib/slices/<Name>/` as `model.json` + `mocks.json` + `index.svelte` + test.
 
 Commands: `pnpm lint`, `pnpm check`, `pnpm test` (`test:unit` then
-`test:smoke`). There is no `pnpm verify` here — that script belongs to the
-native starter, which has diverged.
+`test:smoke`, the `@smoke` Playwright tier), and `pnpm verify`, which runs
+lint, check, build and test in that order. Unlike the native starter's
+`verify` it has no axe audit step, so it is CI's order minus the a11y audit.
 
 `pnpm install` also installs a pre-commit hook (`simple-git-hooks`, via
 `prepare`) that runs `prettier --write` on the staged files through
@@ -93,6 +94,51 @@ on publish, then prove it by publishing a trivial string and grepping
 production for it. A green Netlify deploy is not the proof; deploys fire on
 pushes too. The native track carries the full three-step version in
 `docs/NEW-SITE.md` (reddoor-starter#129).
+
+## Tests build; they don't freeze
+
+Tests are how an agent builds against a comp without a human watching:
+the-pointe fidelity specs under `tests/gate/` are exactly the instruments that
+got the frozen render right. Once a site ships, the same specs fence in design
+decisions a human is entitled to make, and until 2026-10-05 every Blux site
+inherited them inside its required check: a page-height band, panel pixel
+sizes, colours and an exact nav list. The native starter ships the tiers that
+roalson-interests#256 introduced (reddoor-starter#180, cherry-picked here), and
+this template adds its fidelity specs to the same scheme: their render
+contracts (slot tokens substituted, landmarks, nav labels, fixture data, no
+page errors) are `@smoke`, and their geometry (the frozen page-height band,
+the computed-style visual layer) is scaffold. The suite is tiered by what a
+red _means_:
+
+| Tier                | Command                                     | Runs                                    | Holds                                                                                                                                       |
+| ------------------- | ------------------------------------------- | --------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------- |
+| **Gate** (contract) | `pnpm test` (vitest + Playwright `@smoke`)  | every PR, inside the required `ci / ci` | what a client would call a bug: links and their targets, the form, keyboard and focus, no-JS, accessible names, AA contrast, data, SEO, CSP |
+| **Nightly**         | `pnpm test:nightly`                         | `nightly.yml`, never blocks a merge     | the reveal first-frame trace and the modal scroll lock; real behaviour, but every assertion is a race against a clock                       |
+| **Scaffold**        | `pnpm test:scaffold` (`pnpm test:e2e`: all) | on demand, while building               | comp geometry, pixel and computed-style pins, the numbers a slice was built to                                                              |
+
+- **A human's design change wins.** When a size, spacing, colour that still
+  passes AA, duration, border, or an added button or link turns a test red,
+  the test is what is wrong: update it or delete it in the same PR. Never revert
+  the change to satisfy the test, and never argue for the pinned value.
+- **Design values never enter the gate.** A gate test asserts what a user or a
+  caller observes, never a Tailwind class list, a px, a ms, an opacity, or a
+  recorded contrast ratio to four places (assert `>= 4.5`). Exact-list equality
+  over things a designer may add to (every link on the page, every button,
+  "exactly nine") is a pin: assert the item that matters is _in_ the list.
+- **Never assert on source as text.** A test that reads a `.svelte` or `.css`
+  file and regexes a class out of it restates the implementation, so every
+  edit is two edits. Parsing `@theme` tokens to compute contrast is fine: that
+  computes a property, it does not restate a string.
+- **Build against the comp freely.** New geometry and timing specs are welcome
+  while a slice is being built; leave them untagged and they land in the
+  scaffold tier, where they are allowed to go stale once a human takes over the
+  design.
+- **`@smoke` is earned.** A test tagged `{ tag: "@smoke" }` has no fixed
+  sleeps, no frame counting, no animation windows, no `boundingBox`/`near()`,
+  no computed-style colour or size, and no element count a new button would
+  change.
+- **A flaky timing test leaves the gate; its window does not widen.** Move it to
+  the nightly list, or delete it if it guards nothing a client would notice.
 
 ## The work journal
 

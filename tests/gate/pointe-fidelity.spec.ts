@@ -37,35 +37,37 @@ function watchConsole(page: Page): string[] {
   return errors;
 }
 
-test("the-pointe catalog fixture renders faithfully; HTML dumped for coverage", async ({
-  page,
-}) => {
-  const errors = watchConsole(page);
-  await page.goto("/dev/blux-pointe");
+test(
+  "the-pointe catalog fixture renders faithfully; HTML dumped for coverage",
+  { tag: "@smoke" },
+  async ({ page }) => {
+    const errors = watchConsole(page);
+    await page.goto("/dev/blux-pointe");
 
-  // Chrome renders once (from the app layout, fed by the fixture page data).
-  await expect(page.locator("footer")).toBeVisible();
-  await expect(page.getByText("Todd Doney")).toBeVisible();
-  // The map widget's static markup is present (hydration is keyless in CI).
-  await expect(page.locator(".blux-map")).toHaveCount(1);
-  await expect(page.locator("#burbank_map")).toHaveCount(1);
-  // Band content rendered through the SliceZone.
-  await expect(page.getByText(/Burbank/i).first()).toBeVisible();
+    // Chrome renders once (from the app layout, fed by the fixture page data).
+    const footer = page.getByRole("contentinfo");
+    await expect(footer).toBeVisible();
+    await expect(footer.getByText("Todd Doney")).toBeVisible();
+    // The map widget's static markup is present (hydration is keyless in CI).
+    await expect(page.locator(".blux-map")).toHaveCount(1);
+    await expect(page.locator("#burbank_map")).toHaveCount(1);
+    // Band content rendered through the SliceZone.
+    await expect(page.getByText(/Burbank/i).first()).toBeVisible();
 
-  // No unexpected console errors beyond the offline-render allowlist.
-  expect(errors).toEqual([]);
+    // No unexpected console errors beyond the offline-render allowlist.
+    expect(errors).toEqual([]);
 
-  // Dump the rendered HTML so the maintenance coverage gate can score it
-  // (POINTE_RENDERED_HTML → this path).
-  const html = await page.content();
-  mkdirSync("test-results/gate", { recursive: true });
-  writeFileSync("test-results/gate/pointe-rendered.html", html);
-});
+    // Dump the rendered HTML so the maintenance coverage gate can score it
+    // (POINTE_RENDERED_HTML → this path).
+    const html = await page.content();
+    mkdirSync("test-results/gate", { recursive: true });
+    writeFileSync("test-results/gate/pointe-rendered.html", html);
+  },
+);
 
 // The visual-fidelity layer: assert the emitted data actually resolves into
 // layout (a real flex-basis grid, band padding, cover crops, type-role
-// wrapping, laid-out heights). A failure here is a REAL fidelity gap — fix the
-// render/emit, never weaken the assertion.
+// wrapping, laid-out heights).
 test("catalog visual layer resolves grid, cover, padding, and type roles", async ({ page }) => {
   await page.setViewportSize({ width: 1280, height: 900 });
   await page.goto("/dev/blux-pointe");
@@ -98,8 +100,7 @@ test("catalog visual layer resolves grid, cover, padding, and type roles", async
   // a cell body computes to a materially larger font-size than default body
   // text. Locks the regression where cell subtitles / secondary headings kept
   // the role CLASS but rendered at default size (RichText could not carry the
-  // class; the theme vars did not resolve at runtime). Fix the emit/render/theme
-  // if this fails — never weaken the assertion.
+  // class; the theme vars did not resolve at runtime).
   const cellRoleSizes = await page
     .locator(".blux-cell__body [class*='txt-role-text'] :is(h1,h2,h3,h4,h5,h6,p)")
     .evaluateAll((els) => els.map((el) => parseFloat(getComputedStyle(el).fontSize)));
