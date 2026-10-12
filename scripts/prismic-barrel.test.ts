@@ -58,7 +58,7 @@ describe("prismicBarrel", () => {
 
 const client = ".svelte-kit/output/client";
 const manifestPath = join(client, ".vite/manifest.json");
-const appPath = ".svelte-kit/generated/client-optimized/app.js";
+const appPath = ".svelte-kit/generated/build/client-optimized/app.js";
 const SIMULATOR_MARKERS = ["slice-simulator--root", "sliceSimulatorAccessedDirectly"];
 
 type Chunk = { file: string; imports?: string[]; isEntry?: boolean };
