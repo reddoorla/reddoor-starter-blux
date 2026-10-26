@@ -2,6 +2,7 @@
   import { page } from "$app/state";
   import BrandIcon from "./BrandIcon.svelte";
   import { categorySlug, type Product } from "$lib/blux/product-types";
+  import { canonicalUrl } from "$lib/seo";
 
   interface Props {
     product: Product;
@@ -22,9 +23,14 @@
   let activeIndex = $state(0);
   const active = $derived(images[activeIndex]);
 
-  // Share targets need the page's absolute url (client + prerender both resolve
-  // it from the request origin).
-  const pageUrl = $derived(page.url.href);
+  // Share targets need the page's absolute url. Per request that is the host
+  // that asked; while prerendering, kit 3 gives page.url its placeholder origin
+  // (sveltekit.config.js says why paths.origin is unset), so the url goes
+  // through $lib/seo's canonicalUrl, which puts the build's production origin
+  // in its place, as Seo does for canonical and og:url. Like canonical, it
+  // drops the query and hash: the product page keeps no state in either, and
+  // a visitor's utm_* tags are not passed on to whoever they share with.
+  const pageUrl = $derived(canonicalUrl(page.url));
   const shares = $derived([
     {
       network: "facebook",
