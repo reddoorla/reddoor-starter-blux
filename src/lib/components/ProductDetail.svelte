@@ -27,7 +27,9 @@
   // that asked; while prerendering, kit 3 gives page.url its placeholder origin
   // (sveltekit.config.js says why paths.origin is unset), so the url goes
   // through $lib/seo's canonicalUrl, which puts the build's production origin
-  // in its place, as Seo does for canonical and og:url.
+  // in its place, as Seo does for canonical and og:url. Like canonical, it
+  // drops the query and hash: the product page keeps no state in either, and
+  // a visitor's utm_* tags are not passed on to whoever they share with.
   const pageUrl = $derived(canonicalUrl(page.url));
   const shares = $derived([
     {
