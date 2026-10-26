@@ -46,5 +46,5 @@ export function load({ params }) {
     };
   }
 
-  error(404, { message: "Product not found" });
+  error(404, "Product not found");
 }

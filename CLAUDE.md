@@ -52,7 +52,7 @@ unless something failed. Personal settings belong in
   is green before the CMS exists. `VITE_PRISMIC_ENVIRONMENT=your-prismic-repo-name`
   reaches the same sentinel from the environment and is a **local-only hatch**:
   set in CI or on Netlify it greens a build that emits no home page alongside a
-  smoke run that expects `/` to 404. `svelte.config.js` and
+  smoke run that expects `/` to 404. `sveltekit.config.js` and
   `tests/smoke/routes.ts` refuse to load under that combination
   (reddoor-starter#120, picked from `ff0b6d8`).
 

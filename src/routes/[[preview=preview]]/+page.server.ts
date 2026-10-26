@@ -24,7 +24,7 @@ export async function load({ fetch, cookies }) {
 
     return { page, collections, ...pageMeta(page) };
   } catch {
-    error(404, { message: "Page not found" });
+    error(404, "Page not found");
   }
 }
 

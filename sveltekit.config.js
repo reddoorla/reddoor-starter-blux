@@ -52,13 +52,15 @@ try {
 // VITE_GOOGLE_MAPS_KEY — the same key that gates runtime hydration. Keyless
 // native sites keep the tight baseline policy.
 const wantsMapsCsp = isFrozenSite || !!process.env.VITE_GOOGLE_MAPS_KEY;
-const mapsHosts = [
+// `const`: kit 3 types each CSP source as a literal template, and a plain
+// array of strings widens to string[], which its types refuse.
+const mapsHosts = /** @type {const} */ ([
   "https://*.googleapis.com",
   "https://*.gstatic.com",
   "https://*.google.com",
   "https://*.ggpht.com",
   "https://*.googleusercontent.com",
-];
+]);
 
 // VITE_REDDOOR_GATE_FIXTURES=1 builds the /dev fixtures into the bundle, for
 // the a11y gate's own build and nothing else (src/routes/dev/+layout.server.ts,
@@ -232,7 +234,7 @@ const config = {
         "https://challenges.cloudflare.com",
         // Google Maps JS API — map hydration (VITE_GOOGLE_MAPS_KEY); see
         // wantsMapsCsp above for why this set is conditional.
-        ...(wantsMapsCsp ? ["blob:", ...mapsHosts] : []),
+        ...(wantsMapsCsp ? /** @type {const} */ (["blob:", ...mapsHosts]) : []),
       ],
       // Modern Maps JS spawns blob: workers; without this directive the
       // worker-src→script-src→default-src fallback lands on 'self' and
@@ -261,7 +263,7 @@ const config = {
         // Cloudflare Turnstile renders its challenge in an iframe from this host.
         "https://challenges.cloudflare.com",
         // Google Maps JS may frame google.com surfaces (per its CSP doc).
-        ...(wantsMapsCsp ? ["https://*.google.com"] : []),
+        ...(wantsMapsCsp ? /** @type {const} */ (["https://*.google.com"]) : []),
       ],
       "connect-src": [
         "self",
@@ -269,13 +271,13 @@ const config = {
         "https://static.cdn.prismic.io",
         // Google Maps JS API telemetry, tile and KML fetches.
         ...(wantsMapsCsp
-          ? [
+          ? /** @type {const} */ ([
               "https://*.googleapis.com",
               "https://*.google.com",
               "https://*.gstatic.com",
               "data:",
               "blob:",
-            ]
+            ])
           : []),
       ],
       "font-src": ["self", "data:", "https://fonts.gstatic.com"],
