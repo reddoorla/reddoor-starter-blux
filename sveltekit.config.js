@@ -103,8 +103,8 @@ export const productionOrigin = originOf(process.env.URL) ?? null;
 // configuration is passed to the `sveltekit(...)` plugin in vite.config.ts,
 // and kit's options are top-level there, with no `kit` namespace. This object
 // is that argument. It lives in its own module, not inline in vite.config.ts,
-// because eslint.config.js, the privacy-services plugin and the CSP and hatch
-// tests read the same object, and they import it with a bare `node` (no Vite).
+// because eslint.config.js and the CSP and hatch tests read the same object,
+// and they import it with a bare `node` (no Vite).
 /** @type {import('@sveltejs/kit/vite').Config} */
 const config = {
   compilerOptions: {
