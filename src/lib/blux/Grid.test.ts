@@ -241,7 +241,7 @@ describe("Grid (recursive fallback)", () => {
     expect(cell.style.getPropertyValue("--cell-basis")).toBe("auto");
   });
 
-  it("reserves the gutter per line (cols), not per cell, on a wrapping grid", () => {
+  it("fits four cells plus three gutters on one line of a wrapping grid", () => {
     // Band 14 shape: 7 cells at cols=4 → 4 per line (25% each) → each reserves
     // (k-1)/k of the gutter at k=4, not at k=7, and four cells plus three
     // gutters still fit one line.
