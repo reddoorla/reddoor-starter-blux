@@ -26,8 +26,12 @@ describe("ProductListing", () => {
       products,
     });
     expect(getByRole("heading", { level: 1 }).textContent).toContain("Upholstered");
-    const links = getAllByRole("link");
-    expect(links).toHaveLength(3);
+    // Only product tiles link under /products/; other links (a "back" link) may come and go.
+    const links = getAllByRole("link").filter((a) =>
+      a.getAttribute("href")?.startsWith("/products/"),
+    );
+    const hrefs = links.map((a) => a.getAttribute("href"));
+    for (const p of products) expect(hrefs).toContain(`/products/${p.slug}`);
     expect(links[0]!.getAttribute("href")).toBe("/products/aria");
   });
 

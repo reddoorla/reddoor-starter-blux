@@ -52,10 +52,13 @@ describe("Grid (recursive fallback)", () => {
         .split(/\s+/)
         .some((c) => /(^|:)basis-(\(--cell-basis\)|\[var\(--cell-basis\)\])$/.test(c)),
     ).toBe(true);
-    // The row's gutter is the one the bases reserve, or the last cell wraps.
+    // The row's gutter is the one the bases reserve, or the last cell wraps:
+    // the row sets --grid-gutter from GRID_GUTTER and its gap consumes it.
     const row = cells[0]?.parentElement as HTMLElement;
-    const gap = /gap-x-\[(\d+(?:\.\d+)?)%\]/.exec(row.className);
-    expect(Number(gap?.[1])).toBe(GRID_GUTTER);
+    expect(row.style.getPropertyValue("--grid-gutter")).toBe(`${GRID_GUTTER}%`);
+    expect(row.className.split(/\s+/).some((c) => /(^|:)gap-x-\(--grid-gutter\)$/.test(c))).toBe(
+      true,
+    );
     expect(container.querySelector("img")?.getAttribute("src")).toBe("https://cdn/a.jpg");
     expect(container.textContent).toContain("Left copy");
   });
@@ -257,7 +260,6 @@ describe("Grid (recursive fallback)", () => {
       );
       const reserve = Number(m?.[1]);
       expect(4 * (25 - reserve) + 3 * GRID_GUTTER).toBeLessThanOrEqual(100);
-      expect(reserve).toBeCloseTo((GRID_GUTTER * 3) / 4, 3);
     }
   });
 

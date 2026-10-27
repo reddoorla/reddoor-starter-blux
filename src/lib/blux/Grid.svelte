@@ -1,6 +1,6 @@
 <script lang="ts">
   import type { RenderNode, MapRenderConfig } from "./presentation";
-  import { rowCellBases } from "./presentation";
+  import { GRID_GUTTER, rowCellBases } from "./presentation";
   import Media from "./Media.svelte";
   import LocationMap from "./LocationMap.svelte";
   import Grid from "./Grid.svelte";
@@ -85,22 +85,23 @@
 {:else if node.kind === "row"}
   {@const bases = rowCellBases(node.cells)}
   <!-- gap-y spaces rows that wrap to their own line (stacked media/text bands
-       and mobile) with Blux's inter-block rhythm. md:gap-x-[4%] is Blux's
-       column gutter between side-by-side cells (md: up); it's reserved back out
-       of each cell's basis by rowCellBases (calc(basis - share%)) so the columns
-       still fit one flex line instead of the last cell wrapping. Keep the 4%
-       here in sync with GRID_GUTTER in presentation.ts. Cells never grow: Blux
+       and mobile) with Blux's inter-block rhythm. md:gap-x-(--grid-gutter) is
+       Blux's column gutter between side-by-side cells (md: up), set from
+       GRID_GUTTER in presentation.ts; it's reserved back out of each cell's
+       basis by rowCellBases (calc(basis - share%)) from the same constant, so
+       the columns still fit one flex line instead of the last cell wrapping. Cells never grow: Blux
        columns are fixed percentages, so a wrapping grid's short last line keeps
        the same cell widths as the full lines above it. -->
   <!-- A row that pins its own box and centers (min-height + _valign, the
        nested block-in-cell parsed to a grid) packs its wrapped lines mid-box
        via content-center — the row analogue of the stack's flex centering. -->
   <div
-    class="flex w-full flex-wrap gap-y-10 md:gap-x-[4%] {valignMiddle(node) &&
+    class="flex w-full flex-wrap gap-y-10 md:gap-x-(--grid-gutter) {valignMiddle(node) &&
     node.style?.['min-height']
       ? 'content-center'
       : ''} {fillColumn(node) ? 'h-full' : ''}"
     style={containerStyle(node.style)}
+    style:--grid-gutter="{GRID_GUTTER}%"
     data-grid-row
   >
     {#each node.cells as cell, i (i)}

@@ -206,8 +206,8 @@ export function cellWidth(token: GridToken): string | null {
 
 /** Blux's baseline column gutter between side-by-side grid cells, as a % of the
  * row. A uniform default (matching the SplitFeature slice), independent of a
- * grid's per-band `spacing` token. Kept in sync with the `md:gap-x-[4%]` utility
- * on the row in Grid.svelte — Tailwind needs the literal there, so change both. */
+ * grid's per-band `spacing` token. Grid.svelte sets the row's `--grid-gutter`
+ * (its `md:gap-x-(--grid-gutter)`) from this constant. */
 export const GRID_GUTTER = 4;
 
 /** Per-cell `--cell-basis` values for a grid row, with the column gutter
