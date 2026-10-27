@@ -140,7 +140,7 @@ Belief corrected on contact: that `Seo` was the only place the prerendered origi
 
 Measured. `pnpm verify`: svelte-check 0/0, 704 unit tests, 14 `@smoke`, including the the-pointe catalog fixture, the frozen render contract and the Blux band axe check. The full e2e suite is 21 of 21 on this branch and on `main`. The brief's prerender-origin mutation needed real content, because the template prerenders nothing on its placeholder repo. So blux was built on 29-navy's Prismic content, which reads publicly: with `URL` set, 4 files, 1 carrying the production origin, none the placeholder; with `URL` unset, `index.html` carries the placeholder. Dropping `csp` from the config fails two tests. Not covered by any test, here or at base: deleting the frozen `/cdn-cgi/` branch, `handleMissingId` or the Maps CSP condition still passes the whole suite (filed).
 
-## 2026-10-27 — Fleet test audit: the design-value pins go, the four layout contracts stay (#TBD)
+## 2026-10-27 — Fleet test audit: the design-value pins go, the four layout contracts stay (#53)
 
 Why: the fleet test audit (reddoorla/reddoor-workspace `audits/2026-10-26-fleet-test-audit/report.md`, batch C for the Blux starter) flagged 82 assertions here and found six tests that break "Tests build; they don't freeze". The reviewers wrote nine mutants against what the audited diff removed. Two were still caught on the branch, three were judged design values, and four were real bugs the diff would have let through. One mutant (`collection-extra-link-outside-cards`) never caught anything a client would notice.
 
