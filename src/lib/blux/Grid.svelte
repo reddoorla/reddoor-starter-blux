@@ -89,9 +89,10 @@
        Blux's column gutter between side-by-side cells (md: up), set from
        GRID_GUTTER in presentation.ts; it's reserved back out of each cell's
        basis by rowCellBases (calc(basis - share%)) from the same constant, so
-       the columns still fit one flex line instead of the last cell wrapping. Cells never grow: Blux
-       columns are fixed percentages, so a wrapping grid's short last line keeps
-       the same cell widths as the full lines above it. -->
+       the columns still fit one flex line instead of the last cell wrapping.
+       Cells never grow: Blux columns are fixed percentages, so a wrapping
+       grid's short last line keeps the same cell widths as the full lines
+       above it. -->
   <!-- A row that pins its own box and centers (min-height + _valign, the
        nested block-in-cell parsed to a grid) packs its wrapped lines mid-box
        via content-center — the row analogue of the stack's flex centering. -->
