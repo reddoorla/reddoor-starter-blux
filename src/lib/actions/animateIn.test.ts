@@ -107,28 +107,47 @@ describe("animateIn — viewport mode", () => {
   });
 
   it("honors a custom delayMax", () => {
-    const el = document.createElement("div");
-    document.body.appendChild(el);
     Object.defineProperty(window, "innerWidth", {
       value: 1000,
       configurable: true,
     });
-    el.getBoundingClientRect = () =>
-      ({
-        left: 500,
-        top: 0,
-        right: 0,
-        bottom: 0,
-        width: 0,
-        height: 0,
-        x: 0,
-        y: 0,
-        toJSON: () => ({}),
-      }) as DOMRect;
+    const placed = (left = 500) => {
+      const el = document.createElement("div");
+      document.body.appendChild(el);
+      el.getBoundingClientRect = () =>
+        ({
+          left,
+          top: 0,
+          right: 0,
+          bottom: 0,
+          width: 0,
+          height: 0,
+          x: 0,
+          y: 0,
+          toJSON: () => ({}),
+        }) as DOMRect;
+      return el;
+    };
+    const delayOf = (el: HTMLElement) => parseFloat(el.style.transitionDelay);
 
-    animateIn(el, { delayMax: 800 });
+    // delayMax: 0 means the row reveals together, wherever it sits.
+    const together = placed();
+    animateIn(together, { delayMax: 0 });
+    expect(delayOf(together)).toBe(0);
 
-    expect(el.style.transitionDelay).toBe("400ms");
+    // A larger delayMax gives a larger delay than the default does.
+    const byDefault = placed();
+    animateIn(byDefault);
+    const wider = placed();
+    animateIn(wider, { delayMax: 800 });
+    expect(delayOf(wider)).toBeGreaterThan(delayOf(byDefault));
+
+    // The delay follows position: further right reveals later.
+    const near = placed(200);
+    animateIn(near, { delayMax: 800 });
+    const far = placed(800);
+    animateIn(far, { delayMax: 800 });
+    expect(delayOf(far)).toBeGreaterThan(delayOf(near));
   });
 
   it("staggers by index x step when `stagger` is set", () => {
