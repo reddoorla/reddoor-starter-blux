@@ -1,0 +1,80 @@
+{
+  "version": 1,
+  "counts": {
+    "src/lib/components/Field.svelte": {
+      "copy\t(required)": 1
+    },
+    "src/lib/components/Footer.svelte": {
+      "copy\tFacebook": 1,
+      "copy\tInstagram": 1,
+      "copy\tLinkedIn": 2,
+      "copy\tPinterest": 1,
+      "copy\tReddit": 1,
+      "copy\tTwitter": 1,
+      "copy\tYouTube": 1
+    },
+    "src/lib/components/LandscapeModal.svelte": {
+      "heading\tPlease Switch to Portrait Mode": 1
+    },
+    "src/lib/components/Nav.svelte": {
+      "alt\tHome": 1,
+      "copy\tClose menu": 2,
+      "copy\tLogo": 1,
+      "copy\tMenu": 2,
+      "copy\tOpen menu": 2,
+      "link\t/": 2
+    },
+    "src/lib/components/ProductDetail.svelte": {
+      "copy\tShare": 1,
+      "copy\tShare on Facebook": 1,
+      "copy\tShare on Pinterest": 1,
+      "copy\tShare on Twitter": 1,
+      "copy\tView image ${…} of ${…}": 1
+    },
+    "src/lib/components/Slider.svelte": {
+      "copy\t${…} of ${…}": 2,
+      "copy\tGo to slide ${…}": 1,
+      "copy\tNext slide": 1,
+      "copy\tPause slides": 1,
+      "copy\tPlay slides": 1,
+      "copy\tPrevious slide": 1,
+      "copy\tSlide": 1,
+      "copy\tSlides": 1,
+      "copy\tof": 2,
+      "copy\tthrough": 1
+    },
+    "src/lib/seo.ts": {
+      "copy\tReddoor": 1
+    },
+    "src/routes/+error.svelte": {
+      "copy\tGo home": 1,
+      "link\t/": 1
+    },
+    "src/routes/+layout.svelte": {
+      "copy\tSkip to main content": 1
+    },
+    "src/routes/[[preview=preview]]/+page.server.ts": {
+      "copy\tPage not found": 1
+    },
+    "src/routes/[[preview=preview]]/[uid]/+page.server.ts": {
+      "copy\tPage not found": 1
+    },
+    "src/routes/contact/+page.server.ts": {
+      "heading\tContact": 1
+    },
+    "src/routes/contact/+page.svelte": {
+      "button\tSend message": 1,
+      "button\tSending…": 1,
+      "copy\tEmail": 1,
+      "copy\tMessage": 1,
+      "copy\tName": 1,
+      "copy\tPhone": 1,
+      "copy\tSend us a message and we'll get back to you.": 1,
+      "copy\tThanks — your message is on its way. We'll be in touch soon.": 1,
+      "heading\tContact us": 1
+    },
+    "src/routes/products/[slug]/+page.server.ts": {
+      "copy\tProduct not found": 1
+    }
+  }
+}
